@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Plus, FileDown, Mail } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useUIStore } from "../../../store/uiStore";
 import { MOCK_BUDGETS } from "../../../data/mockBudgets";
 import { useKpis } from "../../../hooks/useKpis";
@@ -13,8 +14,9 @@ import { useToastStore } from "../../../store/toastStore";
 export default function OrcamentosPage() {
     const { isDark } = useUIStore();
     const pushToast = useToastStore((s) => s.push);
+    const navigate = useNavigate();
 
-    const [searchTop, setSearchTop] = useState("");
+    const [searchTop] = useState("");
     const [filtros, setFiltros] = useState<Filtros>({ busca: "", status: "", inicio: "", fim: "", cliente: "", projeto: "", min: "" });
     const [sort, setSort] = useState<SortKey>("-emissao");
 
@@ -26,7 +28,7 @@ export default function OrcamentosPage() {
 
 
     const kpis = useKpis(filtered);
-    const onNew = () => pushToast("Novo orçamento (mock)");
+    const onNew = () => navigate("/vendas/orcamentos/novo");
     const onExport = () => pushToast("Exportar (mock)");
     const onEmail = () => pushToast("Enviar e-mail (mock)");
 

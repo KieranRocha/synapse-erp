@@ -1,5 +1,5 @@
 // App.tsx
-import React, { useState } from "react";
+import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "./components/Ui/Sidebar";
 import Header from "./components/Ui/Header";
@@ -10,6 +10,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 const TITLES: Record<string, { title: string; subtitle: string }> = {
   "/": { title: "Dashboard Executivo", subtitle: "Visão geral dos indicadores operacionais" },
   "/vendas/orcamentos": { title: "Gestão de Orçamentos", subtitle: "Controle completo do processo de orçamentação comercial" },
+  "/vendas/orcamentos/novo": { title: "Novo Orçamento", subtitle: "Cadastro e composição de custos" },
   "/projetos": { title: "Gestão de Projetos", subtitle: "Acompanhe o andamento de todos os projetos em execução" },
   "/estoque": { title: "BOM & Estoque", subtitle: "Itens, materiais e estrutura de produto" },
   "/compras": { title: "Compras", subtitle: "Requisições, cotações e pedidos" },
