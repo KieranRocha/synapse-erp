@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useUIStore } from "../../../store/uiStore";
 import { MOCK_BUDGETS } from "../../../data/mockBudgets";
 import { useKpis } from "../../../hooks/useKpis";
-import { filterBudgets, sortBudgets, type Filtros, type SortKey } from "../../../utils/budgetFilters";
+import { filterBudgets, sortBudgets, type Filtros, type SortKey, type Budget } from "../../../utils/budgetFilters";
 import { KpiCards } from "../../../components/budgets/KpiCards";
 import { FiltersBar } from "../../../components/budgets/FiltersBar";
 import { BudgetsTable } from "../../../components/budgets/BudgetsTable";
@@ -31,6 +31,7 @@ export default function OrcamentosPage() {
     const onNew = () => navigate("/vendas/orcamentos/novo");
     const onExport = () => pushToast("Exportar (mock)");
     const onEmail = () => pushToast("Enviar e-mail (mock)");
+    const onView = (r: Budget) => navigate(`/vendas/orcamentos/detalhe?num=${r.numero}`);
 
 
 
@@ -59,6 +60,7 @@ export default function OrcamentosPage() {
                 {/* Tabela */}
                 <BudgetsTable
                     rows={filtered}
+                    onView={onView}
                     onEdit={(r) => pushToast(`Editar ${r.numero} (mock)`)}
                     onDuplicate={(r) => pushToast(`Duplicar ${r.numero} (mock)`)}
                     onPdf={(r) => pushToast(`Gerar PDF ${r.numero} (mock)`)}

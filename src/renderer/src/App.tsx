@@ -11,6 +11,7 @@ const TITLES: Record<string, { title: string; subtitle: string }> = {
   "/": { title: "Dashboard Executivo", subtitle: "Visão geral dos indicadores operacionais" },
   "/vendas/orcamentos": { title: "Gestão de Orçamentos", subtitle: "Controle completo do processo de orçamentação comercial" },
   "/vendas/orcamentos/novo": { title: "Novo Orçamento", subtitle: "Cadastro e composição de custos" },
+  "/vendas/orcamentos/detalhe": { title: "Detalhes do Orçamento", subtitle: "Consulta de orçamento" },
   "/projetos": { title: "Gestão de Projetos", subtitle: "Acompanhe o andamento de todos os projetos em execução" },
   "/estoque": { title: "BOM & Estoque", subtitle: "Itens, materiais e estrutura de produto" },
   "/compras": { title: "Compras", subtitle: "Requisições, cotações e pedidos" },
