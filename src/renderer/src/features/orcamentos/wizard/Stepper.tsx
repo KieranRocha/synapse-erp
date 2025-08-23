@@ -23,7 +23,7 @@ export default function Stepper({ step, setStep, isDark }: { step: number; setSt
                 })}
             </div>
             <div className={`mt-2 h-1 rounded-full ${isDark ? "bg-neutral-800" : "bg-neutral-200"}`}>
-                <div className="h-full rounded-full transition-all" style={{ width: `${((step + 1) / STEPS.length) * 100}%`, background: isDark ? "rgb(59 130 246 / 0.6)" : "rgb(59 130 246 / 0.8)" }} />
+                <div className="h-full rounded-full transition-all" style={{ width: `${((step + 1) / STEPS.length) * 100}%`, background: isDark ? "white" : "grey" }} />
             </div>
         </div>
     );

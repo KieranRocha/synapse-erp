@@ -50,7 +50,7 @@ export default function StepItens({ items, setItems, isDark }: { items: Item[]; 
     const scrollByAmount = (dx: number) => scrollerRef.current?.scrollBy({ left: dx, behavior: "smooth" });
 
     return (
-        <section className={`${isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-neutral-200"} rounded-2xl border p-4`}>
+        <section className={` ${isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-neutral-200"} rounded-2xl border p-4`}>
             <h3 className="font-semibold mb-3">Itens do Orçamento</h3>
             {/* Tabs */}
             <div className="relative -mx-1 px-6">

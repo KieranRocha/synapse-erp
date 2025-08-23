@@ -98,53 +98,108 @@ export default function NovoOrcamentoWizard() {
     const onSave = () => { if (!validateStep(0) || !validateStep(1)) return; pushToast("Orçamento salvo (mock)"); };
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(240px,300px)] gap-6">
-            <div>
-                <Stepper step={step} setStep={setStep} isDark={isDark} />
-                <div className="space-y-6">
-                    {step === 0 && <StepDados meta={meta} setMeta={setMeta} isDark={isDark} />}
-                    {step === 1 && <StepItens items={items} setItems={setItems} isDark={isDark} />}
-                    {step === 2 && <StepFinanceiro fin={fin} setFin={setFin} isDark={isDark} />}
-                    {step === 3 && <StepPrecoEMargem items={items} fin={fin} isDark={isDark} meta={meta} setMeta={setMeta} />},
+        <div className="">
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(240px,300px)] max-w-7xl p-8 gap-6">
+                <div>
+                    <Stepper step={step} setStep={setStep} isDark={isDark} />
+                    <div className="space-y-6 min-h-[100dvh] pb-24">
+                        {step === 0 && <StepDados meta={meta} setMeta={setMeta} isDark={isDark} />}
+                        {step === 1 && <StepItens items={items} setItems={setItems} isDark={isDark} />}
+                        {step === 2 && <StepFinanceiro fin={fin} setFin={setFin} isDark={isDark} />}
+                        {step === 3 && <StepPrecoEMargem items={items} fin={fin} isDark={isDark} meta={meta} setMeta={setMeta} />}
 
-                    {step === 4 && <StepRevisao items={items} fin={fin} isDark={isDark} />}
+                        {step === 4 && <StepRevisao items={items} fin={fin} isDark={isDark} />}
+                    </div>
+
+
+
                 </div>
 
-                <div className="mt-6 flex items-center justify-between">
-                    <button onClick={goPrev} disabled={step === 0} className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-sm transition disabled:opacity-50 disabled:cursor-not-allowed ${isDark ? "border-neutral-700/50 text-neutral-200 hover:bg-neutral-800" : "border-neutral-300 text-neutral-700 hover:bg-neutral-100"}`} title="Voltar">
-                        <ChevronLeft className="w-4 h-4" /> Voltar
-                    </button>
-                    {step < STEPS.length - 1 ? (
-                        <button onClick={goNext} className={`inline-flex  items-center gap-2 px-4 py-2 rounded-xl border text-sm transition ${isDark ? "border-blue-500/40 text-blue-300 hover:bg-blue-500/10" : "border-blue-500/40 text-blue-700 hover:bg-blue-50"}`} title="Avançar">
-                            Avançar <ChevronRight className="w-4 h-4" />
-                        </button>
-                    ) : (
-                        <button onClick={onSave} className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-sm transition ${isDark ? "border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10" : "border-emerald-500/40 text-emerald-700 hover:bg-emerald-50"}`} title="Salvar orçamento">
-                            <Save className="w-4 h-4" /> Salvar Orçamento
-                        </button>
-                    )}
+                <div className="hidden  lg:block">
+                    <SummaryMini items={items} fin={fin} isDark={isDark} />
                 </div>
 
-                <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div className={`${isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-neutral-200"} rounded-2xl border p-4`}>
-                        <p className="text-xs opacity-70">Subtotal</p>
-                        <p className="text-xl font-semibold">{totals.subtotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>
-                    </div>
-                    <div className={`${isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-neutral-200"} rounded-2xl border p-4`}>
-                        <p className="text-xs opacity-70">Descontos</p>
-                        <p className="text-sm">{`${(fin.descontoPct).toFixed(2)}%`} + {fin.descontoValor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>
-                        <p className="text-lg font-semibold mt-1">{totals.descontoTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>
-                    </div>
-                    <div className={`${isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-neutral-200"} rounded-2xl border p-4`}>
-                        <p className="text-xs opacity-70">Total</p>
-                        <p className="text-xl font-semibold">{totals.total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>
-                    </div>
-                </div>
             </div>
+            {/* Sticky action bar: resumo + navegação (tudo em linha) */}
+            <div className={`sticky bottom-0 inset-x-0 z-50 backdrop-blur border-t ${isDark ? "bg-neutral-950/60 border-neutral-800" : "bg-white/70 border-neutral-200"
+                }`}>
+                <div className=" mx-auto px-4 md:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
+                    {/* Resumo inline (Subtotal | Descontos | Total) */}
+                    <div className="flex items-center gap-3 text-xs sm:text-sm">
+                        <span className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-xl border ${isDark ? "border-neutral-700/50 text-neutral-200" : "border-neutral-300 text-neutral-700"
+                            }`}>
+                            <span className="opacity-70">Subtotal:</span>
+                            <b>{totals.subtotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</b>
+                        </span>
 
-            <div className="hidden lg:block">
-                <SummaryMini items={items} fin={fin} isDark={isDark} />
+                        <span className={`hidden sm:inline-flex items-center gap-2 px-2.5 py-1 rounded-xl border ${isDark ? "border-neutral-700/50 text-neutral-200" : "border-neutral-300 text-neutral-700"
+                            }`}>
+                            <span className="opacity-70">Descontos:</span>
+                            <span className="opacity-90">
+                                {totals.descontoTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                            </span>
+                            <span className="opacity-60">
+                                ({Number(fin.descontoPct).toFixed(2)}% + {fin.descontoValor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })})
+                            </span>
+                        </span>
+
+                        <span className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-xl border ${isDark ? "border-neutral-700/50 text-neutral-200" : "border-neutral-300 text-neutral-700"
+                            }`}>
+                            <span className="opacity-70">Total:</span>
+                            <b className={`${isDark ? "text-emerald-300" : "text-emerald-700"}`}>
+                                {totals.total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                            </b>
+                        </span>
+                    </div>
+
+                    {/* Navegação + Ações */}
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={goPrev}
+                            disabled={step === 0}
+                            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-sm transition disabled:opacity-50 disabled:cursor-not-allowed ${isDark ? "border-neutral-700/50 text-neutral-200 hover:bg-neutral-800" : "border-neutral-300 text-neutral-700 hover:bg-neutral-100"
+                                }`}
+                            title="Voltar"
+                        >
+                            <ChevronLeft className="w-4 h-4" /> Voltar
+                        </button>
+
+                        {/* Salvar rascunho */}
+                        <button
+
+                            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-sm transition ${isDark ? "border-amber-500/40 text-amber-300 hover:bg-amber-500/10" : "border-amber-500/40 text-amber-700 hover:bg-amber-50"
+                                }`}
+                            title="Salvar rascunho"
+                            type="button"
+                        >
+                            Salvar rascunho
+                        </button>
+
+                        {step < STEPS.length - 1 ? (
+                            <button
+                                onClick={goNext}
+                                className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-sm transition ${isDark ? "border-blue-500/40 text-blue-300 hover:bg-blue-500/10" : "border-blue-500/40 text-blue-700 hover:bg-blue-50"
+                                    }`}
+                                title="Avançar"
+                            >
+                                Avançar <ChevronRight className="w-4 h-4" />
+                            </button>
+                        ) : (
+                            <button
+                                onClick={onSave}
+                                className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-sm transition ${isDark ? "border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10" : "border-emerald-500/40 text-emerald-700 hover:bg-emerald-50"
+                                    }`}
+                                title="Salvar orçamento"
+                            >
+                                <Save className="w-4 h-4" /> Salvar orçamento
+                            </button>
+                        )}
+                    </div>
+                </div>
             </div>
         </div>
+
+
     );
+
 }

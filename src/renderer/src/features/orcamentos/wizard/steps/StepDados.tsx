@@ -96,7 +96,7 @@ export default function StepDados({ meta, setMeta, isDark }: { meta: Meta; setMe
     };
 
     return (
-        <section className={`${isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-neutral-200"} rounded-2xl border p-6`}>
+        <section className={` ${isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-neutral-200"} rounded-2xl border p-6`}>
             <h3 className="font-semibold mb-4 text-lg">Dados do Orçamento</h3>
 
             {/* Layout SEM GRID: blocos verticais com grupos flexíveis */}
