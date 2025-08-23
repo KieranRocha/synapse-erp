@@ -16,6 +16,15 @@ export default defineConfig({
         '@renderer': resolve('src/renderer/src')
       }
     },
-    plugins: [react(), tailwindcss()]
+    plugins: [react(), tailwindcss()],
+    server: {
+      proxy: {
+        '/api/cnpj': {
+          target: 'https://brasilapi.com.br',
+          changeOrigin: true,
+          rewrite: (p) => p.replace(/^\/api\/cnpj/, '/api/cnpj/v1')
+        }
+      }
+    }
   }
 })

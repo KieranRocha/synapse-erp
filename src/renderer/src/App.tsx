@@ -28,7 +28,7 @@ export default function App() {
   return (
     <>
       {/* Use h-screen e faça a coluna da direita rolar */}
-      <div className={`flex h-screen ${isDark ? "bg-neutral-900" : "bg-white"}`}>
+      <div className={`flex h-screen ${isDark ? "bg-neutral-950" : "bg-neutral-50"}`}>
         {/* Sidebar fixa/estática (sticky e altura total) */}
         <div className="sticky top-0 h-screen">
           <Sidebar
@@ -59,7 +59,7 @@ export default function App() {
               setIsDark={setIsDark}
               title={meta.title}
               subtitle={meta.subtitle}
-              currentPage={pathname === "/" ? "dashboard" : pathname.replace("/", "")}
+              currentPage={pathname}
             />
           </div>
 

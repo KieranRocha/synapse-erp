@@ -1,1 +1,61 @@
 @import 'tailwindcss';
+/* src/styles/scrollbar.css */
+
+@layer utilities {
+  /* esconder totalmente (caso use em outro lugar) */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* scroll fino e bonito */
+  .nice-scrollbar {
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-gutter: stable both-edges;
+  }
+  .nice-scrollbar::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+  } /* Chrome/Edge/Safari */
+  .nice-scrollbar::-webkit-scrollbar-track {
+    background: #0a0a0a;
+  }
+  .nice-scrollbar::-webkit-scrollbar-thumb {
+    background: #0a0a0a;
+    border-radius: 9999px;
+  }
+  .nice-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(31, 214, 67, 0.35);
+  }
+
+  /* Dark mode */
+  .dark .nice-scrollbar::-webkit-scrollbar-thumb {
+    background: #0a0a0a;
+  }
+  .dark .nice-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(223, 3, 3, 0.805);
+  }
+}
+@utility nice-scrollbar {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-gutter: stable both-edges;
+  scrollbar-color: #767676 transparent; /* Firefox: thumb track */
+
+  &::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+  } /* WebKit */
+  &::-webkit-scrollbar-track {
+    background: #ffd1d1;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #db0505;
+    border-radius: 9999px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: #1fd643;
+  }
+}

@@ -1,7 +1,19 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, PersistOptions } from 'zustand/middleware'
 
-export const useUIStore = create(
+interface UIState {
+  isDark: boolean
+  setIsDark: () => void
+  setDark: (val: boolean) => void
+  sidebarCollapsed: boolean
+  toggleSidebar: () => void
+}
+
+type UIStore = UIState & {
+  _persist?: PersistOptions<UIState>
+}
+
+export const useUIStore = create<UIStore>()(
   persist(
     (set) => ({
       isDark: false,

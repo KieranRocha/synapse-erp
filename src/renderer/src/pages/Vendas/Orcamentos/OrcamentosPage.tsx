@@ -36,7 +36,7 @@ export default function OrcamentosPage() {
 
 
     return (
-        <div className={isDark ? "bg-neutral-950 text-neutral-100" : "bg-white text-neutral-900"}>
+        <div className={isDark ? "bg-neutral-950 text-neutral-100" : "bg-neutral-50 text-neutral-900"}>
             <main className="  p-4 md:p-6 lg:p-8">
                 {/* Header local da página */}
                 <div className="flex items-center justify-between mb-6">

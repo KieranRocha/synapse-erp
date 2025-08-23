@@ -62,7 +62,11 @@ function ToastViewport() {
 const currency = (v = 0) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const pct = (v = 0) => `${v.toFixed(2)}%`;
 const dateBR = (d: string | number | Date) => new Date(d).toLocaleDateString("pt-BR");
-const num = (v: any) => (Number.isFinite(+v) ? +v : 0);
+const num = (v: string | number | boolean | null | undefined): number => {
+  if (v === null || v === undefined) return 0;
+  const converted = Number(v);
+  return Number.isFinite(converted) ? converted : 0;
+};
 
 type Status = "em análise" | "aprovado" | "reprovado" | "vencido";
 
@@ -186,7 +190,7 @@ function StatusBadge({ status }: { status: Status }) {
 function SectionCard({ title, right, children }: { title: string; right?: React.ReactNode; children: React.ReactNode }) {
   const { isDark } = useThemeStore();
   return (
-    <section className={`${isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"} rounded-2xl border p-4}>
+    <section className={`${isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"} rounded-2xl border p-4`}>
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-semibold">{title}</h3>
         {right}
@@ -272,10 +276,11 @@ function TotalsPanel({ fin, items }: { fin: Finance; items: Item[] }) {
   );
 }
 
-function Timeline({ events = [] as { data: string; tipo: string; desc: string }[] }) {
+function Timeline({ events }: { events?: { data: string; tipo: string; desc: string }[] }) {
+  const eventsList = events || [];
   return (
     <ol className="relative border-s border-neutral-700/30 pl-5 space-y-4">
-      {events.map((e, idx) => (
+      {eventsList.map((e, idx) => (
         <li key={idx} className="ms-2">
           <div className="absolute -start-1.5 mt-1.5 h-3 w-3 rounded-full border-2 border-neutral-700/40 bg-neutral-900" />
           <p className="text-xs opacity-70">{new Date(e.data).toLocaleString("pt-BR")}</p>
@@ -283,7 +288,7 @@ function Timeline({ events = [] as { data: string; tipo: string; desc: string }[
           <p className="text-sm opacity-80">{e.desc}</p>
         </li>
       ))}
-      {events.length === 0 && <li className="text-sm opacity-70">Sem eventos.</li>}
+      {eventsList.length === 0 && <li className="text-sm opacity-70">Sem eventos.</li>}
     </ol>
   );
 }
@@ -291,45 +296,6 @@ function Timeline({ events = [] as { data: string; tipo: string; desc: string }[
 /********************
  * LAYOUT — SIDEBAR & HEADER
  ********************/
-function NavItem({ icon: Icon, text, active, onClick, badge }: { icon: any; text: string; active?: boolean; onClick?: () => void; badge?: string }) {
-  const { isDark } = useThemeStore();
-  const base = "w-full flex items-center px-3 py-2 rounded-xl transition";
-  const inactive = isDark ? "text-neutral-300 hover:bg-neutral-800 hover:text-neutral-50" : "text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900";
-  const activeCls = isDark ? "bg-neutral-800 text-neutral-50" : "bg-neutral-200 text-neutral-900";
-  return (
-    <button onClick={onClick} className={`${base} ${active ? activeCls : inactive}`}>
-      <Icon className="mr-3 h-5 w-5" />
-      <span className="flex-1 text-left text-sm">{text}</span>
-      {badge ? (
-        <span className={`ml-2 rounded-full px-2 py-0.5 text-[10px] font-medium ${isDark ? "bg-neutral-100 text-neutral-900" : "bg-neutral-900 text-neutral-100"}`}>
-          {badge}
-        </span>
-      ) : null}
-    </button>
-  );
-}
-
-function Sidebar({ current, setCurrent }: { current: string; setCurrent: (v: string) => void }) {
-  const { isDark } = useThemeStore();
-  return (
-    <aside className={`w-64 flex-shrink-0 min-h-screen p-4 border-r ${isDark ? "bg-neutral-900 text-neutral-100 border-neutral-800" : "bg-white text-neutral-900 border-neutral-200"}`}>
-      <div className="flex items-center mb-6 px-2">
-        <Factory className={`h-6 w-6 mr-2 ${isDark ? "text-neutral-100" : "text-neutral-900"}`} />
-        <h1 className="text-lg font-semibold">ERP Máquinas</h1>
-      </div>
-      <nav className="space-y-2">
-        <NavItem icon={LayoutDashboard} text="Dashboard" active={current === "dashboard"} onClick={() => setCurrent("dashboard")} />
-        <NavItem icon={FileText} text="Orçamentos" active={current === "orcamentos"} onClick={() => setCurrent("orcamentos")} badge="2" />
-        <NavItem icon={Wrench} text="Projetos" active={current === "projetos"} onClick={() => setCurrent("projetos")} />
-        <NavItem icon={Package} text="BOM & Estoque" active={current === "estoque"} onClick={() => setCurrent("estoque")} />
-        <NavItem icon={Users} text="Clientes" active={current === "clientes"} onClick={() => setCurrent("clientes")} />
-      </nav>
-      <div className={`mt-6 pt-6 ${isDark ? "border-neutral-800" : "border-neutral-200"} border-t`}>
-        <NavItem icon={Settings} text="Configurações" active={current === "config"} onClick={() => setCurrent("config")} />
-      </div>
-    </aside>
-  );
-}
 
 function HeaderBarShell({ title, subtitle, onBack }: { title: string; subtitle: string; onBack?: () => void }) {
   const { isDark, toggle } = useThemeStore();
@@ -395,7 +361,7 @@ export default function OrcamentoDetalhePage() {
     try {
       await navigator.clipboard.writeText(`${location.origin}${location.pathname}?num=${orc.numero}`);
       pushToast("Link copiado");
-    } catch (err) {
+    } catch {
       pushToast("Não foi possível copiar");
     }
   };
@@ -413,121 +379,113 @@ export default function OrcamentoDetalhePage() {
     <div className={isDark ? "bg-neutral-950 text-neutral-100" : "bg-neutral-50 text-neutral-900"}>
       <div className="flex min-h-screen">
         {/* Sidebar */}
-        <Sidebar current="orcamentos" setCurrent={() => {}} />
 
-        {/* Conteúdo */}
-        <div className="flex-1 flex flex-col">
-          <HeaderBarShell
-            title={`Detalhes — ${orc.numero}`}
-            subtitle="Consulta de orçamento (somente leitura)"
-            onBack={() => history.back()}
-          />
 
-          <main className="max-w-7xl mx-auto w-full p-4 md:p-6 lg:p-8 space-y-6">
-            {/* Cabeçalho do Orçamento */}
-            <div className={`${isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"} rounded-2xl border p-4}>
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-3">
-                    <h1 className="text-xl md:text-2xl font-semibold">{orc.projeto}</h1>
-                    <StatusBadge status={orc.status} />
-                  </div>
-                  <p className="text-sm opacity-80">Cliente: <span className="font-medium">{orc.cliente}</span></p>
-                  <p className="text-xs opacity-60">Emissão: {dateBR(orc.emissao)} • Validade: {dateBR(orc.validade)} • Resp.: {orc.responsavel}</p>
+        <main className="max-w-7xl mx-auto w-full p-4 md:p-6 lg:p-8 space-y-6">
+          {/* Cabeçalho do Orçamento */}
+          <div className={`${isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"} rounded-2xl border p-4`}>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              <div className="space-y-1">
+                <div className="flex items-center gap-3">
+                  <h1 className="text-xl md:text-2xl font-semibold">{orc.projeto}</h1>
+                  <StatusBadge status={orc.status} />
                 </div>
-                {ActionBar}
+                <p className="text-sm opacity-80">Cliente: <span className="font-medium">{orc.cliente}</span></p>
+                <p className="text-xs opacity-60">Emissão: {dateBR(orc.emissao)} • Validade: {dateBR(orc.validade)} • Resp.: {orc.responsavel}</p>
               </div>
+              {ActionBar}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* COLUNA 1-2 — Detalhes & Itens */}
+            <div className="lg:col-span-2 space-y-6">
+              <SectionCard title="Dados comerciais">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <KeyRow label="Nº Orçamento" value={orc.numero} />
+                  <KeyRow label="Status" value={<StatusBadge status={orc.status} />} />
+                  <KeyRow label="Condição de Pagamento" value={orc.condPgto} />
+                  <KeyRow label="Entrega" value={orc.entrega} />
+                  <KeyRow label="Garantia" value={orc.garantia} />
+                  <KeyRow label="SLA interno (dias)" value={String(orc.slaDias)} />
+                </div>
+                {orc.observacoes && (
+                  <div className="mt-3 text-sm">
+                    <p className="opacity-70 mb-1">Observações</p>
+                    <p className="leading-relaxed">{orc.observacoes}</p>
+                  </div>
+                )}
+              </SectionCard>
+
+              <SectionCard title="Itens do orçamento">
+                <ItemsTable itens={orc.itens} />
+              </SectionCard>
+
+              <SectionCard title="Histórico & Interações">
+                <Timeline events={orc.historico || []} />
+              </SectionCard>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* COLUNA 1-2 — Detalhes & Itens */}
-              <div className="lg:col-span-2 space-y-6">
-                <SectionCard title="Dados comerciais">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <KeyRow label="Nº Orçamento" value={orc.numero} />
-                    <KeyRow label="Status" value={<StatusBadge status={orc.status} />} />
-                    <KeyRow label="Condição de Pagamento" value={orc.condPgto} />
-                    <KeyRow label="Entrega" value={orc.entrega} />
-                    <KeyRow label="Garantia" value={orc.garantia} />
-                    <KeyRow label="SLA interno (dias)" value={String(orc.slaDias)} />
+            {/* COLUNA 3 — Resumo & Parâmetros */}
+            <div className="lg:col-span-1 space-y-6">
+              <SectionCard title="Resumo financeiro">
+                <TotalsPanel fin={orc.fin} items={orc.itens} />
+              </SectionCard>
+
+              <SectionCard title="Parâmetros aplicados">
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="flex justify-between"><span className="opacity-70">Desc. (%)</span><span>{pct(num(orc.fin.descontoPct))}</span></div>
+                  <div className="flex justify-between"><span className="opacity-70">Desc. (R$)</span><span>{currency(num(orc.fin.descontoValor))}</span></div>
+                  <div className="flex justify-between"><span className="opacity-70">Frete</span><span>{currency(num(orc.fin.frete))}</span></div>
+                  <div className="flex justify-between"><span className="opacity-70">Outros</span><span>{currency(num(orc.fin.outrosCustos))}</span></div>
+                  <div className="flex justify-between"><span className="opacity-70">ISS</span><span>{pct(num(orc.fin.issPct))}</span></div>
+                  <div className="flex justify-between"><span className="opacity-70">ICMS</span><span>{pct(num(orc.fin.icmsPct))}</span></div>
+                  <div className="flex justify-between"><span className="opacity-70">PIS</span><span>{pct(num(orc.fin.pisPct))}</span></div>
+                  <div className="flex justify-between"><span className="opacity-70">COFINS</span><span>{pct(num(orc.fin.cofinsPct))}</span></div>
+                </div>
+              </SectionCard>
+
+              <SectionCard title="Anexos">
+                <ul className="space-y-2 text-sm">
+                  {(orc.anexos || []).map((a) => (
+                    <li key={a.id} className="flex items-center justify-between">
+                      <span className="truncate mr-3">{a.nome}</span>
+                      <button onClick={() => pushToast(`Baixar ${a.nome} (mock)`)} className="px-2 py-1 rounded-lg border border-neutral-700/30 text-xs hover:bg-neutral-100/5 transition">Baixar</button>
+                    </li>
+                  ))}
+                  {(orc.anexos || []).length === 0 && <li className="opacity-70">Sem anexos</li>}
+                </ul>
+              </SectionCard>
+
+              <SectionCard title="Indicadores rápidos">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="rounded-xl border border-neutral-700/30 p-3">
+                    <p className="text-xs opacity-70">Ticket (total)</p>
+                    <p className="text-lg font-semibold">{currency(t.total)}</p>
                   </div>
-                  {orc.observacoes && (
-                    <div className="mt-3 text-sm">
-                      <p className="opacity-70 mb-1">Observações</p>
-                      <p className="leading-relaxed">{orc.observacoes}</p>
-                    </div>
-                  )}
-                </SectionCard>
-
-                <SectionCard title="Itens do orçamento">
-                  <ItemsTable itens={orc.itens} />
-                </SectionCard>
-
-                <SectionCard title="Histórico & Interações">
-                  <Timeline events={orc.historico || []} />
-                </SectionCard>
-              </div>
-
-              {/* COLUNA 3 — Resumo & Parâmetros */}
-              <div className="lg:col-span-1 space-y-6">
-                <SectionCard title="Resumo financeiro">
-                  <TotalsPanel fin={orc.fin} items={orc.itens} />
-                </SectionCard>
-
-                <SectionCard title="Parâmetros aplicados">
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="flex justify-between"><span className="opacity-70">Desc. (%)</span><span>{pct(num(orc.fin.descontoPct))}</span></div>
-                    <div className="flex justify-between"><span className="opacity-70">Desc. (R$)</span><span>{currency(num(orc.fin.descontoValor))}</span></div>
-                    <div className="flex justify-between"><span className="opacity-70">Frete</span><span>{currency(num(orc.fin.frete))}</span></div>
-                    <div className="flex justify-between"><span className="opacity-70">Outros</span><span>{currency(num(orc.fin.outrosCustos))}</span></div>
-                    <div className="flex justify-between"><span className="opacity-70">ISS</span><span>{pct(num(orc.fin.issPct))}</span></div>
-                    <div className="flex justify-between"><span className="opacity-70">ICMS</span><span>{pct(num(orc.fin.icmsPct))}</span></div>
-                    <div className="flex justify-between"><span className="opacity-70">PIS</span><span>{pct(num(orc.fin.pisPct))}</span></div>
-                    <div className="flex justify-between"><span className="opacity-70">COFINS</span><span>{pct(num(orc.fin.cofinsPct))}</span></div>
+                  <div className="rounded-xl border border-neutral-700/30 p-3">
+                    <p className="text-xs opacity-70">Margem alvo</p>
+                    <p className="text-lg font-semibold">{pct(orc.margem * 100)}</p>
                   </div>
-                </SectionCard>
-
-                <SectionCard title="Anexos">
-                  <ul className="space-y-2 text-sm">
-                    {(orc.anexos || []).map((a) => (
-                      <li key={a.id} className="flex items-center justify-between">
-                        <span className="truncate mr-3">{a.nome}</span>
-                        <button onClick={() => pushToast(`Baixar ${a.nome} (mock)`)} className="px-2 py-1 rounded-lg border border-neutral-700/30 text-xs hover:bg-neutral-100/5 transition">Baixar</button>
-                      </li>
-                    ))}
-                    {(orc.anexos || []).length === 0 && <li className="opacity-70">Sem anexos</li>}
-                  </ul>
-                </SectionCard>
-
-                <SectionCard title="Indicadores rápidos">
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="rounded-xl border border-neutral-700/30 p-3">
-                      <p className="text-xs opacity-70">Ticket (total)</p>
-                      <p className="text-lg font-semibold">{currency(t.total)}</p>
-                    </div>
-                    <div className="rounded-xl border border-neutral-700/30 p-3">
-                      <p className="text-xs opacity-70">Margem alvo</p>
-                      <p className="text-lg font-semibold">{pct(orc.margem * 100)}</p>
-                    </div>
-                    <div className="rounded-xl border border-neutral-700/30 p-3">
-                      <p className="text-xs opacity-70">Dias até vencer</p>
-                      <p className="text-lg font-semibold">{Math.max(0, Math.ceil((new Date(orc.validade).getTime() - Date.now()) / (1000*60*60*24)))}</p>
-                    </div>
-                    <div className="rounded-xl border border-neutral-700/30 p-3">
-                      <p className="text-xs opacity-70">Revisões</p>
-                      <p className="text-lg font-semibold">{orc.rev}</p>
-                    </div>
+                  <div className="rounded-xl border border-neutral-700/30 p-3">
+                    <p className="text-xs opacity-70">Dias até vencer</p>
+                    <p className="text-lg font-semibold">{Math.max(0, Math.ceil((new Date(orc.validade).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))}</p>
                   </div>
-                </SectionCard>
-              </div>
+                  <div className="rounded-xl border border-neutral-700/30 p-3">
+                    <p className="text-xs opacity-70">Revisões</p>
+                    <p className="text-lg font-semibold">{orc.rev}</p>
+                  </div>
+                </div>
+              </SectionCard>
             </div>
+          </div>
 
-            <div className="text-xs opacity-70">*Somente consulta — ações de edição/duplicação podem ser adicionadas em uma versão de "Editar".</div>
-          </main>
-          <ToastViewport />
-        </div>
+          <div className="text-xs opacity-70">*Somente consulta — ações de edição/duplicação podem ser adicionadas em uma versão de &quot;Editar&quot;.</div>
+        </main>
+        <ToastViewport />
       </div>
     </div>
+
   );
 }
 
