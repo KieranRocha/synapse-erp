@@ -1,24 +1,8 @@
-import React, { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { create } from "zustand";
-import {
-  Factory,
-  LayoutDashboard,
-  FileText,
-  Wrench,
-  Package,
-  Users,
-  Settings,
-  RefreshCw,
-  Bell,
-  Sun,
-  Moon,
-  FileDown,
-  Mail,
-  Copy,
-  Share2,
-  ArrowLeft,
-  CheckCircle2,
-} from "lucide-react";
+import { FileDown, Mail, Copy, Share2, CheckCircle2 } from "lucide-react";
+import { MOCK_DETALHE } from "./mockOrcamentoDetalhe";
 
 /********************
  * THEME & TOAST (Zustand)
@@ -132,47 +116,6 @@ function computeTotals({ items, descontoPct, descontoValor, frete, outrosCustos,
   const total = base + iss + icms + pis + cofins + adicionais;
   return { subtotal, desconto1, desconto2, descontoTotal, base, iss, icms, pis, cofins, adicionais, total };
 }
-
-/********************
- * MOCK — DETALHE
- ********************/
-const MOCK_DETALHE: OrcamentoDetalhe = {
-  id: 19,
-  numero: "ORC-00019",
-  cliente: "Metal Forte",
-  projeto: "Guindaste Colunar - Cap. 2t",
-  responsavel: "Ana",
-  emissao: "2025-08-17",
-  validade: "2025-09-01",
-  status: "em análise",
-  margem: 0.25,
-  condPgto: "30/60/90 (Boleto)",
-  entrega: "FOB - 30 dias após aprovação",
-  garantia: "12 meses contra defeitos de fabricação",
-  observacoes: "Preços válidos para pagamento dentro do prazo e sem retenções.",
-  slaDias: 2,
-  enviado: true,
-  respondeuEm: null,
-  rev: 0,
-  itens: [
-    { id: crypto.randomUUID(), categoria: "Máquinas & Equipamentos", codigo: "EQ-2001", nome: "Coluna metálica 6m - ASTM A36", un: "un", qtd: 1, preco: 68000 },
-    { id: crypto.randomUUID(), categoria: "Materiais / Matéria-prima", codigo: "MP-3110", nome: "Chapas 1/2\" oxicorte", un: "kg", qtd: 500, preco: 18.9 },
-    { id: crypto.randomUUID(), categoria: "Consumíveis", codigo: "CS-0901", nome: "Eletrodos E7018", un: "cx", qtd: 3, preco: 780 },
-    { id: crypto.randomUUID(), categoria: "Serviços", codigo: "SV-1200", nome: "Pintura epóxi PU", un: "m²", qtd: 120, preco: 35 },
-    { id: crypto.randomUUID(), categoria: "Mão de Obra", codigo: "MO-0100", nome: "Soldador nível II", un: "h", qtd: 80, preco: 65 },
-    { id: crypto.randomUUID(), categoria: "Ferramentas & Acessórios", codigo: "FR-5520", nome: "Talha elétrica 2t (importada)", un: "un", qtd: 1, preco: 14500 },
-  ],
-  fin: { descontoPct: 3, descontoValor: 0, frete: 2500, outrosCustos: 1800, issPct: 3, icmsPct: 12, pisPct: 1.65, cofinsPct: 7.6 },
-  anexos: [
-    { id: crypto.randomUUID(), nome: "Desenho Guindaste - Vista Geral.pdf", tipo: "pdf" },
-    { id: crypto.randomUUID(), nome: "Memorial de Cálculo - V1.xlsx", tipo: "xlsx" },
-  ],
-  historico: [
-    { data: "2025-08-17T09:15:00", tipo: "criado", desc: "Orçamento criado por Ana" },
-    { data: "2025-08-17T09:40:00", tipo: "enviado", desc: "Proposta enviada por e-mail ao cliente" },
-    { data: "2025-08-19T16:05:00", tipo: "interacao", desc: "Cliente solicitou detalhamento de pintura" },
-  ],
-};
 
 /********************
  * UI — ELEMENTOS COMUNS
@@ -297,55 +240,13 @@ function Timeline({ events }: { events?: { data: string; tipo: string; desc: str
  * LAYOUT — SIDEBAR & HEADER
  ********************/
 
-function HeaderBarShell({ title, subtitle, onBack }: { title: string; subtitle: string; onBack?: () => void }) {
-  const { isDark, toggle } = useThemeStore();
-  const [notifications, setNotifications] = useState(2);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const btnIcon = `p-2 rounded-full transition ${isDark ? "hover:bg-neutral-800" : "hover:bg-neutral-200"}`;
-  return (
-    <header className={`${isDark ? "bg-neutral-950" : "bg-neutral-50"} border-b ${isDark ? "border-neutral-800" : "border-neutral-200"} px-4 py-3 flex items-center justify-between sticky top-0 z-20`}>
-      <div className="flex items-start gap-3">
-        <button onClick={onBack} className={`${btnIcon} mt-0.5`} title="Voltar"><ArrowLeft size={16} /></button>
-        <div>
-          <h2 className="text-lg font-semibold">{title}</h2>
-          <p className="text-xs opacity-60">{subtitle}</p>
-        </div>
-      </div>
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => { setIsRefreshing(true); setTimeout(() => setIsRefreshing(false), 800); }}
-          className={btnIcon}
-          title="Atualizar"
-        >
-          <RefreshCw className={`${isRefreshing ? "animate-spin" : ""} opacity-80`} size={16} />
-        </button>
-        <button onClick={toggle} className={btnIcon} title="Tema">
-          {isDark ? <Sun size={16} /> : <Moon size={16} />}
-        </button>
-        <button onClick={() => setNotifications(0)} className={btnIcon} title="Notificações">
-          <div className="relative">
-            <Bell size={18} className="opacity-80" />
-            {notifications > 0 && (
-              <span className={`absolute -top-1 -right-1 ${isDark ? "bg-neutral-100 text-neutral-900" : "bg-neutral-900 text-neutral-100"} text-[10px] rounded-full h-4 w-4 flex items-center justify-center`}>
-                {notifications}
-              </span>
-            )}
-          </div>
-        </button>
-      </div>
-    </header>
-  );
-}
-
-/********************
- * PÁGINA — DETALHES (somente consulta)
- ********************/
 export default function OrcamentoDetalhePage() {
   const { isDark } = useThemeStore();
   const pushToast = useToastStore((s) => s.push);
+  const navigate = useNavigate();
 
   // Permite abrir por querystring: ?id=19 ou ?num=ORC-00019 (mock)
-  const [orc, setOrc] = useState<OrcamentoDetalhe>(MOCK_DETALHE);
+  const [orc, setOrc] = useState<OrcamentoDetalhe>(MOCK_DETALHE as OrcamentoDetalhe);
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
     const id = q.get("id");
@@ -368,6 +269,12 @@ export default function OrcamentoDetalhePage() {
 
   const ActionBar = (
     <div className="flex items-center gap-2">
+      <button
+        onClick={() => navigate("/vendas/orcamentos/editar")}
+        className="px-3 py-2 rounded-xl border border-neutral-700/40 bg-transparent text-sm hover:bg-neutral-100/5 transition"
+      >
+        Editar
+      </button>
       <button onClick={() => pushToast("Gerar PDF (mock)")} className="px-3 py-2 rounded-xl border border-neutral-700/40 bg-transparent text-sm hover:bg-neutral-100/5 transition"><FileDown className="w-4 h-4 inline mr-1" /> PDF</button>
       <button onClick={() => pushToast("Enviar por e-mail (mock)")} className="px-3 py-2 rounded-xl border border-neutral-700/40 bg-transparent text-sm hover:bg-neutral-100/5 transition"><Mail className="w-4 h-4 inline mr-1" /> E-mail</button>
       <button onClick={onCopy} className="px-3 py-2 rounded-xl border border-neutral-700/40 bg-transparent text-sm hover:bg-neutral-100/5 transition"><Copy className="w-4 h-4 inline mr-1" /> Copiar link</button>

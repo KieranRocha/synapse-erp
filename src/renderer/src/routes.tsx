@@ -6,6 +6,7 @@ import BeautifulPage from "./pages/BeautifulPage/BeautifulPage"; // placeholder 
 import OrcamentosPage from "./pages/Vendas/Orcamentos/OrcamentosPage";
 import NovoOrcamentoPage from "./pages/Vendas/Orcamentos/NovoOrcamentoPage";
 import OrcamentoDetalhePage from "./pages/Vendas/Orcamentos/OrcamentoDetalhePage";
+import OrcamentoEdicaoPage from "./pages/Vendas/Orcamentos/OrcamentoEdicaoPage";
 
 export const routes: RouteObject[] = [
     // Rotas fora do layout (ex.: auth)
@@ -29,6 +30,7 @@ export const routes: RouteObject[] = [
             { path: "vendas/orcamentos", element: <OrcamentosPage /> },
             { path: "vendas/orcamentos/novo", element: <NovoOrcamentoPage /> },
             { path: "vendas/orcamentos/detalhe", element: <OrcamentoDetalhePage /> },
+            { path: "vendas/orcamentos/editar", element: <OrcamentoEdicaoPage /> },
             { path: "projetos", element: <BeautifulPage title="Projetos" subtitle="Planejamento, produção, instalação e entrega." /> },
             { path: "estoque", element: <BeautifulPage title="BOM & Estoque" subtitle="Materiais, itens e estrutura de produto." /> },
             { path: "compras", element: <BeautifulPage title="Compras" subtitle="Requisições, cotações e pedidos de compra." /> },
