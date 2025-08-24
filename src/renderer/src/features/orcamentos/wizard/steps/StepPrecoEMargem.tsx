@@ -1,13 +1,14 @@
-import React, { useMemo, useState, useEffect } from "react";
-import type { Item, Fin, Pricing as PricingType } from "../../types";
+import { useMemo, useState, useEffect } from "react";
+import type { Item, Fin, Pricing as PricingType, PriceMethod } from "../../types";
 import { currency, num, perItemImpact } from "../../utils";
-import { buildConsideredCost, priceFromMarkup, priceFromMargin } from "../../pricing";
+import { buildConsideredCost, priceFromMarkup, priceFromMargin, PricingFlagsAsCost } from "../../pricing";
 
 export default function StepPrecoEMargem({
     items, fin, isDark, meta, setMeta,
 }: {
     items: Item[]; fin: Fin; isDark: boolean;
-    meta: any; setMeta: (v: any) => void;
+    meta: { precoAprovado?: number; precoSugerido?: number;[key: string]: unknown };
+    setMeta: (v: { precoAprovado?: number; precoSugerido?: number;[key: string]: unknown }) => void;
 }) {
     const { totals } = useMemo(() => perItemImpact(items, fin), [items, fin]);
 
@@ -21,18 +22,23 @@ export default function StepPrecoEMargem({
         considerISSasCost: false,
     });
 
-    const costConsiderado = buildConsideredCost(totals, pricing);
+    // Mapeia Pricing para PricingFlagsAsCost
+    const pricingFlags: PricingFlagsAsCost = {
+        icmsAsCost: pricing.considerICMSasCost,
+        pisCofinsAsCost: pricing.considerPISCOFINSasCost,
+        ipiAsCost: pricing.considerIPIasCost,
+        issAsCost: pricing.considerISSasCost,
+    };
+
+    const costConsiderado = buildConsideredCost(totals, pricingFlags);
     const precoSugerido = pricing.method === "MARKUP"
         ? priceFromMarkup(costConsiderado, pricing.markupPct)
         : priceFromMargin(costConsiderado, pricing.marginPct);
 
     // salva direto no meta (aproveita seu store/submit)
     useEffect(() => {
-        const precoEfetivo = meta.precoAprovado ?? precoSugerido;
         setMeta({ ...meta, precoSugerido });     // mantém
-        // 👇 injeta no Fin para os resumos/compute usarem
-        setFin((f: any) => ({ ...f, precoVenda: precoEfetivo }));
-    }, [meta.precoAprovado, precoSugerido]);
+    }, [meta.precoAprovado, precoSugerido, setMeta, meta]);
 
     const card = `${isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-neutral-200"} rounded-2xl border p-4`;
     const input = `px-3 py-2 rounded-xl border text-sm outline-none ${isDark ? "border-neutral-800 bg-neutral-900" : "border-neutral-300 bg-white"}`;
@@ -47,7 +53,7 @@ export default function StepPrecoEMargem({
                     <select
                         className={input}
                         value={pricing.method}
-                        onChange={(e) => setPricing({ ...pricing, method: e.target.value as any })}
+                        onChange={(e) => setPricing({ ...pricing, method: e.target.value as PriceMethod })}
                     >
                         <option value="MARGIN">Margem sobre preço</option>
                         <option value="MARKUP">Markup sobre custo</option>
@@ -81,8 +87,8 @@ export default function StepPrecoEMargem({
                     <label key={k} className="inline-flex items-center gap-2">
                         <input
                             type="checkbox"
-                            checked={(pricing as any)[k]}
-                            onChange={(e) => setPricing({ ...pricing, [k]: e.target.checked } as any)}
+                            checked={pricing[k as keyof PricingType] as boolean}
+                            onChange={(e) => setPricing({ ...pricing, [k]: e.target.checked })}
                         />
                         {label}
                     </label>

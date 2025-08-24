@@ -96,7 +96,7 @@ export default function StepDados({ meta, setMeta, isDark }: { meta: Meta; setMe
     };
 
     return (
-        <section className={`${isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-neutral-200"} rounded-2xl border p-6`}>
+        <section className={` ${isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-neutral-200"} rounded-2xl border p-6`}>
             <h3 className="font-semibold mb-4 text-lg">Dados do Orçamento</h3>
 
             {/* Layout SEM GRID: blocos verticais com grupos flexíveis */}
@@ -123,6 +123,11 @@ export default function StepDados({ meta, setMeta, isDark }: { meta: Meta; setMe
                     <p className="text-xs opacity-70">Dados do Cliente (preenchidos automaticamente pelo CNPJ)</p>
 
                     <div className="flex flex-col md:flex-row gap-3">
+                        <div className="flex-1 flex flex-col">
+                            <label className="text-xs opacity-70 mb-1">Nome</label>
+                            <input className={`${input} pointer-events-none opacity-75`} readOnly value={meta.cliente || ""} placeholder="—" />
+
+                        </div>
                         <div className="flex-1 flex flex-col">
                             <label className="text-xs opacity-70 mb-1">Endereço</label>
                             <input className={`${input} pointer-events-none opacity-75`} readOnly value={meta.clienteEndereco || ""} placeholder="—" />
