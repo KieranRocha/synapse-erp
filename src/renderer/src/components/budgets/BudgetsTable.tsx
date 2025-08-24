@@ -2,7 +2,7 @@ import type { Budget } from "../../utils/budgetFilters";
 import { currency, dateBR } from "../../utils/format";
 
 
-export function BudgetsTable({ rows, onEdit, onDuplicate, onPdf }: { rows: Budget[]; onEdit: (r: Budget) => void; onDuplicate: (r: Budget) => void; onPdf: (r: Budget) => void; }) {
+export function BudgetsTable({ rows, onView, onEdit, onDuplicate, onPdf }: { rows: Budget[]; onView: (r: Budget) => void; onEdit: (r: Budget) => void; onDuplicate: (r: Budget) => void; onPdf: (r: Budget) => void; }) {
     const btn = "px-2 py-1 rounded-lg border border-neutral-700/30 text-xs hover:bg-neutral-100/5 transition";
     return (
         <div className="rounded-2xl border border-neutral-700/20 bg-white/5 backdrop-blur">
@@ -39,6 +39,7 @@ export function BudgetsTable({ rows, onEdit, onDuplicate, onPdf }: { rows: Budge
                                 <td className="px-4 py-3">{r.resp}</td>
                                 <td className="px-4 py-3">
                                     <div className="flex items-center gap-2">
+                                        <button onClick={() => onView(r)} className={btn}>Detalhes</button>
                                         <button onClick={() => onEdit(r)} className={btn}>Editar</button>
                                         <button onClick={() => onDuplicate(r)} className={btn}>Duplicar</button>
                                         <button onClick={() => onPdf(r)} className={btn}>PDF</button>

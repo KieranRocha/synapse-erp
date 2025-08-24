@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
 import { Plus, FileDown, Mail } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useUIStore } from "../../../store/uiStore";
 import { MOCK_BUDGETS } from "../../../data/mockBudgets";
 import { useKpis } from "../../../hooks/useKpis";
-import { filterBudgets, sortBudgets, type Filtros, type SortKey } from "../../../utils/budgetFilters";
+import { filterBudgets, sortBudgets, type Filtros, type SortKey, type Budget } from "../../../utils/budgetFilters";
 import { KpiCards } from "../../../components/budgets/KpiCards";
 import { FiltersBar } from "../../../components/budgets/FiltersBar";
 import { BudgetsTable } from "../../../components/budgets/BudgetsTable";
@@ -13,8 +14,9 @@ import { useToastStore } from "../../../store/toastStore";
 export default function OrcamentosPage() {
     const { isDark } = useUIStore();
     const pushToast = useToastStore((s) => s.push);
+    const navigate = useNavigate();
 
-    const [searchTop, setSearchTop] = useState("");
+    const [searchTop] = useState("");
     const [filtros, setFiltros] = useState<Filtros>({ busca: "", status: "", inicio: "", fim: "", cliente: "", projeto: "", min: "" });
     const [sort, setSort] = useState<SortKey>("-emissao");
 
@@ -26,15 +28,16 @@ export default function OrcamentosPage() {
 
 
     const kpis = useKpis(filtered);
-    const onNew = () => pushToast("Novo orçamento (mock)");
+    const onNew = () => navigate("/vendas/orcamentos/novo");
     const onExport = () => pushToast("Exportar (mock)");
     const onEmail = () => pushToast("Enviar e-mail (mock)");
+    const onView = (r: Budget) => navigate(`/vendas/orcamentos/detalhe?num=${r.numero}`);
 
 
 
     return (
-        <div className={isDark ? "bg-neutral-950 text-neutral-100" : "bg-white text-neutral-900"}>
-            <main className="  p-4 md:p-6 lg:p-8">
+        <div className={isDark ? "bg-dark-bg text-neutral-100" : "bg-neutral-50 text-neutral-900"}>
+            <main className="  max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
                 {/* Header local da página */}
                 <div className="flex items-center justify-between mb-6">
 
@@ -57,6 +60,7 @@ export default function OrcamentosPage() {
                 {/* Tabela */}
                 <BudgetsTable
                     rows={filtered}
+                    onView={onView}
                     onEdit={(r) => pushToast(`Editar ${r.numero} (mock)`)}
                     onDuplicate={(r) => pushToast(`Duplicar ${r.numero} (mock)`)}
                     onPdf={(r) => pushToast(`Gerar PDF ${r.numero} (mock)`)}

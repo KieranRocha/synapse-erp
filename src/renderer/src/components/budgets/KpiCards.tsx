@@ -4,7 +4,7 @@ import { currency } from "../../utils/format";
 
 export function KpiCards({ kpis }: { kpis: { conversao: number; ticketMedio: number; vencidosPct: number; margemMedia: number; prazoMedio: number; revisadosPct: number; } }) {
     const KPICard = ({ title, value, trend }: { title: string; value: string | number; trend?: number }) => (
-        <div className="rounded-2xl border border-neutral-700/20 bg-white/5 backdrop-blur p-4">
+        <div className="rounded-2xl border border-neutral-700/20 bg-dark-card backdrop-blur p-4">
             <p className="text-xs opacity-70 mb-1">{title}</p>
             <div className="text-xl font-semibold">{value}</div>
             {typeof trend === "number" && (

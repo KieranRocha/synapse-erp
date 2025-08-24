@@ -15,7 +15,7 @@ export function FiltersBar({ filtros, setFiltros, onSortChange, sort, isDark }: 
 
     const card = isDark
         ? "rounded-2xl border border-neutral-800 bg-neutral-950/60 backdrop-blur p-3 md:p-4 mb-6"
-        : "rounded-2xl border border-neutral-200 bg-white/70 backdrop-blur p-3 md:p-4 mb-6";
+        : "rounded-2xl border border-neutral-200  backdrop-blur p-3 md:p-4 mb-6";
 
     const searchWrap = isDark
         ? "flex-1 flex items-center gap-2 rounded-xl px-3 py-2 border border-neutral-700 bg-neutral-900/60 text-neutral-100"
@@ -29,6 +29,7 @@ export function FiltersBar({ filtros, setFiltros, onSortChange, sort, isDark }: 
         ? "px-3 py-2 rounded-xl text-sm inline-flex items-center gap-2 border border-neutral-700 bg-neutral-900/60 text-neutral-100 hover:bg-neutral-800/60 transition"
         : "px-3 py-2 rounded-xl text-sm inline-flex items-center gap-2 border border-neutral-200 bg-white/70 text-neutral-800 hover:bg-neutral-50 transition";
 
+    const search = isDark ? "w-full bg-transparent outline-none text-sm placeholder-inherit" : "w-full bg-white outline-none text-sm placeholder-inherit"
     const STATUSES = ["em análise", "aprovado", "reprovado", "vencido"] as const;
 
     return (
@@ -40,7 +41,7 @@ export function FiltersBar({ filtros, setFiltros, onSortChange, sort, isDark }: 
                         value={filtros.busca || ""}
                         onChange={(e) => setFiltros((s) => ({ ...s, busca: e.target.value }))}
                         placeholder="Buscar por nº, cliente ou projeto"
-                        className="w-full bg-transparent outline-none text-sm placeholder-inherit"
+                        className={search}
                     />
                 </div>
 

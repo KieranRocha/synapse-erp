@@ -1,5 +1,5 @@
 // App.tsx
-import React, { useState } from "react";
+import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "./components/Ui/Sidebar";
 import Header from "./components/Ui/Header";
@@ -10,6 +10,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 const TITLES: Record<string, { title: string; subtitle: string }> = {
   "/": { title: "Dashboard Executivo", subtitle: "Visão geral dos indicadores operacionais" },
   "/vendas/orcamentos": { title: "Gestão de Orçamentos", subtitle: "Controle completo do processo de orçamentação comercial" },
+  "/vendas/orcamentos/novo": { title: "Novo Orçamento", subtitle: "Cadastro e composição de custos" },
+  "/vendas/orcamentos/detalhe": { title: "Detalhes do Orçamento", subtitle: "Consulta de orçamento" },
   "/projetos": { title: "Gestão de Projetos", subtitle: "Acompanhe o andamento de todos os projetos em execução" },
   "/estoque": { title: "BOM & Estoque", subtitle: "Itens, materiais e estrutura de produto" },
   "/compras": { title: "Compras", subtitle: "Requisições, cotações e pedidos" },
@@ -26,7 +28,7 @@ export default function App() {
   return (
     <>
       {/* Use h-screen e faça a coluna da direita rolar */}
-      <div className={`flex h-screen ${isDark ? "bg-neutral-900" : "bg-white"}`}>
+      <div className={`flex h-screen ${isDark ? "bg-neutral-950" : "bg-neutral-50"}`}>
         {/* Sidebar fixa/estática (sticky e altura total) */}
         <div className="sticky top-0 h-screen">
           <Sidebar
@@ -57,7 +59,7 @@ export default function App() {
               setIsDark={setIsDark}
               title={meta.title}
               subtitle={meta.subtitle}
-              currentPage={pathname === "/" ? "dashboard" : pathname.replace("/", "")}
+              currentPage={pathname}
             />
           </div>
 
