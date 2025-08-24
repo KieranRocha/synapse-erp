@@ -99,7 +99,7 @@ export default function NovoOrcamentoWizard() {
 
     return (
         <div className="">
-            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(240px,300px)] max-w-7xl p-8 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(240px,300px)] max-w-7xl mx-auto p-8 gap-6">
                 <div>
                     <Stepper step={step} setStep={setStep} isDark={isDark} />
                     <div className="space-y-6 min-h-[100dvh] pb-24">

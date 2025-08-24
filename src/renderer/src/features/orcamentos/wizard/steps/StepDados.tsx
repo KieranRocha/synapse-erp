@@ -124,6 +124,11 @@ export default function StepDados({ meta, setMeta, isDark }: { meta: Meta; setMe
 
                     <div className="flex flex-col md:flex-row gap-3">
                         <div className="flex-1 flex flex-col">
+                            <label className="text-xs opacity-70 mb-1">Nome</label>
+                            <input className={`${input} pointer-events-none opacity-75`} readOnly value={meta.cliente || ""} placeholder="—" />
+
+                        </div>
+                        <div className="flex-1 flex flex-col">
                             <label className="text-xs opacity-70 mb-1">Endereço</label>
                             <input className={`${input} pointer-events-none opacity-75`} readOnly value={meta.clienteEndereco || ""} placeholder="—" />
                         </div>
