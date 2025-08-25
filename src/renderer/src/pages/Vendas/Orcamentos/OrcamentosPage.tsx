@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { Plus, FileDown, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useUIStore } from "../../../store/uiStore";
 import { MOCK_BUDGETS } from "../../../data/mockBudgets";
 import { useKpis } from "../../../hooks/useKpis";
 import { filterBudgets, sortBudgets, type Filtros, type SortKey, type Budget } from "../../../utils/budgetFilters";
@@ -12,7 +11,7 @@ import { useToastStore } from "../../../store/toastStore";
 
 // OBS: Esta página NÃO rende Sidebar/Header — use o seu layout existente.
 export default function OrcamentosPage() {
-    const { isDark } = useUIStore();
+
     const pushToast = useToastStore((s) => s.push);
     const navigate = useNavigate();
 
@@ -36,7 +35,7 @@ export default function OrcamentosPage() {
 
 
     return (
-        <div className={isDark ? "bg-dark-bg text-neutral-100" : "bg-neutral-50 text-neutral-900"}>
+        <div className="bg-bg">
             <main className="  max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
                 {/* Header local da página */}
                 <div className="flex items-center justify-between mb-6">
@@ -54,7 +53,7 @@ export default function OrcamentosPage() {
 
 
                 {/* Filtros */}
-                <FiltersBar filtros={filtros} setFiltros={setFiltros} sort={sort} onSortChange={setSort} isDark={isDark} />
+                <FiltersBar filtros={filtros} setFiltros={setFiltros} sort={sort} onSortChange={setSort} />
 
 
                 {/* Tabela */}

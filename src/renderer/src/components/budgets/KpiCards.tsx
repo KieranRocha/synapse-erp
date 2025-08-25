@@ -1,20 +1,51 @@
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { currency } from "../../utils/format";
 
+type KPIs = {
+    conversao: number;
+    ticketMedio: number;
+    vencidosPct: number;
+    margemMedia: number;
+    prazoMedio: number;
+    revisadosPct: number;
+};
 
-export function KpiCards({ kpis }: { kpis: { conversao: number; ticketMedio: number; vencidosPct: number; margemMedia: number; prazoMedio: number; revisadosPct: number; } }) {
-    const KPICard = ({ title, value, trend }: { title: string; value: string | number; trend?: number }) => (
-        <div className="rounded-2xl border border-neutral-700/20 bg-dark-card backdrop-blur p-4">
-            <p className="text-xs opacity-70 mb-1">{title}</p>
-            <div className="text-xl font-semibold">{value}</div>
-            {typeof trend === "number" && (
-                <div className={`mt-1 text-xs flex items-center gap-1 ${trend > 0 ? "text-green-500" : trend < 0 ? "text-red-500" : "opacity-70"}`}>
-                    {trend > 0 ? <ArrowUpRight className="w-3 h-3" /> : trend < 0 ? <ArrowDownRight className="w-3 h-3" /> : null}
-                    {trend !== 0 ? `${Math.abs(trend)}%` : "—"}
-                </div>
-            )}
+export function KpiCards({ kpis }: { kpis: KPIs }) {
+    const Trend = ({ trend }: { trend?: number }) => {
+        if (typeof trend !== "number") return null;
+
+        const cls =
+            trend > 0
+                ? "text-success"
+                : trend < 0
+                    ? "text-danger"
+                    : "text-muted-foreground";
+
+        return (
+            <div className={`mt-1 text-xs flex items-center gap-1 ${cls}`} aria-live="polite">
+                {trend > 0 && <ArrowUpRight className="w-3 h-3" aria-hidden />}
+                {trend < 0 && <ArrowDownRight className="w-3 h-3" aria-hidden />}
+                {trend !== 0 ? `${Math.abs(trend)}%` : "—"}
+            </div>
+        );
+    };
+
+    const KPICard = ({
+        title,
+        value,
+        trend,
+    }: {
+        title: string;
+        value: string | number;
+        trend?: number;
+    }) => (
+        <div className="rounded-2xl border border-border bg-card shadow-card backdrop-blur p-4">
+            <p className="text-xs text-muted-foreground mb-1">{title}</p>
+            <div className="text-xl font-semibold text-fg">{value}</div>
+            <Trend trend={trend} />
         </div>
     );
+
     return (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
             <KPICard title="Taxa de Conversão" value={`${kpis.conversao.toFixed(0)}%`} trend={+5} />
