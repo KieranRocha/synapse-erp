@@ -16,6 +16,7 @@ const TITLES: Record<string, { title: string; subtitle: string }> = {
   "/estoque": { title: "BOM & Estoque", subtitle: "Itens, materiais e estrutura de produto" },
   "/compras": { title: "Compras", subtitle: "Requisições, cotações e pedidos" },
   "/clientes": { title: "Clientes", subtitle: "Cadastro, histórico e contatos" },
+  "/clientes/novo": { title: "Novo cliente", subtitle: "Adicione um novo cliente" },
   "/configuracoes": { title: "Configurações", subtitle: "Preferências e integrações" },
 };
 

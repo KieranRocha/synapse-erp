@@ -8,6 +8,7 @@ import NovoOrcamentoPage from "./pages/Vendas/Orcamentos/NovoOrcamentoPage";
 import OrcamentoDetalhePage from "./pages/Vendas/Orcamentos/OrcamentoDetalhePage";
 import OrcamentoEdicaoPage from "./pages/Vendas/Orcamentos/OrcamentoEdicaoPage";
 import NovoClientePage from "./pages/Clientes/NovoClientePage";
+import ClientesPage from "./pages/Clientes/ClientesPage";
 export const routes: RouteObject[] = [
     // Rotas fora do layout (ex.: auth)
     { path: "/auth/login", element: <AuthLogin /> },
@@ -35,7 +36,7 @@ export const routes: RouteObject[] = [
             { path: "projetos", element: <BeautifulPage title="Projetos" subtitle="Planejamento, produção, instalação e entrega." /> },
             { path: "estoque", element: <BeautifulPage title="BOM & Estoque" subtitle="Materiais, itens e estrutura de produto." /> },
             { path: "compras", element: <BeautifulPage title="Compras" subtitle="Requisições, cotações e pedidos de compra." /> },
-            { path: "clientes", element: <BeautifulPage title="Clientes" subtitle="Cadastro, histórico e contatos." /> },
+            { path: "clientes", element: <ClientesPage /> },
             { path: "configuracoes", element: <BeautifulPage title="Configurações" subtitle="Preferências, integrações e segurança." /> },
         ],
     },
