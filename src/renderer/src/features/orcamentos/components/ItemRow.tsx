@@ -24,9 +24,7 @@ function parsePtNumber(str: string): number {
 export default function ItemRow({
     item, onChange, onRemove, isDark,
 }: { item: Item; onChange: (item: Item) => void; onRemove: () => void; isDark: boolean }) {
-    const cell = `px-3 py-2 rounded-lg border text-sm outline-none transition ${isDark ? "border-neutral-800 bg-neutral-900 focus:ring-2 focus:ring-blue-600/40"
-        : "border-neutral-300 bg-white focus:ring-2 focus:ring-blue-500/30"
-        }`;
+    const cell = `border-border bg-bg px-3 py-2 rounded-lg border text-sm outline-none transition `;
 
     // displays locais para UX suave (edita "cru" no foco, formata ao blur)
     const [qtdInput, setQtdInput] = useState<string>(toQuantityStringBR(item.qtd));

@@ -37,9 +37,9 @@ export default function ItemsDetails({
         });
     };
 
-    const wrap = `${isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-neutral-200"} rounded-2xl border`;
-    const zebra = isDark ? "odd:bg-neutral-900 even:bg-neutral-900/60" : "odd:bg-white even:bg-neutral-50";
-    const borderRow = isDark ? "border-neutral-800/70" : "border-neutral-200";
+    const wrap = `bg-card border-border  rounded-2xl border`;
+    const zebra = "odd:bg-card even:bg-card/60"
+    const borderRow = "border-border border-border border"
 
     return (
         <section className={`${wrap} p-4`}>
@@ -50,8 +50,8 @@ export default function ItemsDetails({
                 </div>
             </div>
 
-            <div className={`relative max-h-[56vh] overflow-auto nice-scrollbar rounded-xl  w-full
-                      ${isDark ? 'border-neutral-800' : 'border-neutral-200'}`}>
+            <div className={`relative max-h-[56vh] overflow-auto nice-scrollbar rounded-xl  w-full bg-card border-border text-fg
+                      `}>
                 <table className="w-full text-sm table-fixed my-2 ">
                     {/* Larguras relativas para evitar "pular" */}
                     <colgroup>
@@ -71,7 +71,7 @@ export default function ItemsDetails({
                                 <React.Fragment key={cat}>
                                     {/* Linha de grupo (categoria) */}
                                     <tr
-                                        className={`${isDark ? "bg-neutral-800/40" : "bg-neutral-50"} ${isDark ? "text-neutral-100" : "text-neutral-800"}`}
+                                        className={`bg-card border-border text-fg `}
                                     >
                                         <td colSpan={5} className="p-0">
                                             <button
@@ -79,8 +79,8 @@ export default function ItemsDetails({
                                                 className={`w-full flex items-center gap-2 px-3 py-2 text-left border-b ${borderRow}
                                     hover:opacity-100 transition`}
                                             >
-                                                <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full
-                                         ${isDark ? "bg-neutral-900 border border-neutral-700" : "bg-white border border-neutral-300"}`}>
+                                                <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full bg-card border-border text-fg
+                                         `}>
                                                     {isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                                                 </span>
                                                 <span className="font-medium">{cat}</span>
@@ -98,7 +98,7 @@ export default function ItemsDetails({
 
                                     {/* Cabeçalho da tabela para cada grupo */}
                                     {isOpen && (
-                                        <tr className={`${isDark ? "bg-neutral-800/20" : "bg-neutral-100"} ${isDark ? "text-neutral-300" : "text-neutral-600"} text-xs font-medium border-b ${borderRow}`}>
+                                        <tr className={`bg-card border-border text-fg  text-xs font-medium border-b ${borderRow}`}>
                                             <th className="text-left p-2 font-medium">Descrição</th>
                                             <th className="text-center p-2 font-medium">Un.</th>
                                             <th className="text-right p-2 font-medium">Qtd</th>
@@ -112,7 +112,7 @@ export default function ItemsDetails({
                                         rows.map((it, idx) => (
                                             <tr
                                                 key={it.id}
-                                                className={`${zebra} ${isDark ? "hover:bg-neutral-800/70" : "hover:bg-neutral-100"}
+                                                className={`bg-card border-border text-fg ${zebra} "}
                                    ${idx === rows.length - 1 ? `border-b ${borderRow}` : ""}`}
                                             >
                                                 <td className="p-2">{it.nome || "—"}</td>

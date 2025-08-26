@@ -60,7 +60,7 @@ export default function StepItens({ items, setItems }: { items: Item[]; setItems
                     {CATEGORIES.map((c) => {
                         const active = tab === c.key;
                         return (
-                            <button key={c.key} onClick={() => setTab(c.key)} className={`whitespace-nowrap snap-start rounded-xl px-3 py-1.5 text-sm border ${active ? "border-primary/40 bg-primary/10 text-primary" : "border-border text-fg hover:bg-muted"}`} title={c.label}>
+                            <button key={c.key} onClick={() => setTab(c.key)} className={`whitespace-nowrap snap-start border rounded-xl px-3 py-1.5 text-sm  ${active ? "badge-analise  " : "border-border text-fg hover:bg-muted"}`} title={c.label}>
                                 {c.label} · {subtotalBy(c.key).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
                             </button>
                         );

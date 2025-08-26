@@ -41,9 +41,9 @@ export default function OrcamentosPage() {
                 <div className="flex items-center justify-between mb-6">
 
                     <div className="flex items-center gap-2">
-                        <button onClick={onNew} className="px-3 py-2 rounded-xl border border-neutral-700/40 bg-transparent text-sm hover:bg-neutral-100/5 transition"><Plus className="w-4 h-4 inline mr-1" /> Novo</button>
-                        <button onClick={onExport} className="px-3 py-2 rounded-xl border border-neutral-700/40 bg-transparent text-sm hover:bg-neutral-100/5 transition"><FileDown className="w-4 h-4 inline mr-1" /> Exportar</button>
-                        <button onClick={onEmail} className="px-3 py-2 rounded-xl border border-neutral-700/40 bg-transparent text-sm hover:bg-neutral-100/5 transition"><Mail className="w-4 h-4 inline mr-1" /> E-mail</button>
+                        <button onClick={onNew} className="px-3 py-2 rounded-lg border border-neutral-700/40 bg-transparent text-sm hover:bg-neutral-100/5 transition"><Plus className="w-4 h-4 inline mr-1" /> Novo</button>
+                        <button onClick={onExport} className="px-3 py-2 rounded-lg border border-neutral-700/40 bg-transparent text-sm hover:bg-neutral-100/5 transition"><FileDown className="w-4 h-4 inline mr-1" /> Exportar</button>
+                        <button onClick={onEmail} className="px-3 py-2 rounded-lg border border-neutral-700/40 bg-transparent text-sm hover:bg-neutral-100/5 transition"><Mail className="w-4 h-4 inline mr-1" /> E-mail</button>
                     </div>
                 </div>
 
