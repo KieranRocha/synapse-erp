@@ -7,11 +7,11 @@ function shareOfTotal(v: number, total: number) {
 }
 
 export default function SummaryMini({
-    items, fin, isDark,
-}: { items: Item[]; fin: Fin; isDark: boolean }) {
+    items, fin,
+}: { items: Item[]; fin: Fin }) {
     const { totals } = useMemo(() => perItemImpact(items, fin), [items, fin]);
     const [open, setOpen] = useState(false);
-    const card = `${isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-neutral-200"} rounded-2xl border p-4`;
+    const card = "bg-card border-border rounded-2xl border p-4";
 
     // Somatório de impostos contemplando todos os cálculos do computeTotals
     const totalImpostos = [
@@ -28,8 +28,7 @@ export default function SummaryMini({
 
     const line = "flex items-center justify-between py-1.5";
     const sub = "text-xs opacity-70";
-    const pill = `ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] border
-    ${isDark ? "border-neutral-700 text-neutral-300" : "border-neutral-300 text-neutral-700"}`;
+    const pill = "ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] border border-border text-fg";
 
     return (
         <aside className="hidden lg:block lg:sticky lg:top-20 space-y-4">
@@ -39,10 +38,7 @@ export default function SummaryMini({
                     <h4 className="font-semibold">Resumo</h4>
                     <button
                         onClick={() => setOpen((v) => !v)}
-                        className={`text-xs rounded-lg px-2 py-1 border transition ${isDark
-                            ? "border-neutral-700/50 text-neutral-300 hover:bg-neutral-800"
-                            : "border-neutral-300 text-neutral-700 hover:bg-neutral-100"
-                            }`}
+                        className="text-xs rounded-lg px-2 py-1 border border-border text-fg transition hover:bg-muted"
                     >
                         {open ? "Ocultar" : "Detalhar"}
                     </button>
@@ -82,7 +78,7 @@ export default function SummaryMini({
                             <span className="opacity-70">Base Produtos (após descontos)</span>
                             <span>{currency(num((totals as any).base))}</span>
                         </div>
-                        <div className={`${line} ${isDark ? "text-neutral-200" : "text-neutral-800"}`}>
+                        <div className={`${line} text-fg`}>
                             <span>
                                 ICMS (com redução)
                                 {num((fin as any).icmsRedBasePct) > 0 && (

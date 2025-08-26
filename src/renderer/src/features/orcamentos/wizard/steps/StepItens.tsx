@@ -5,7 +5,7 @@ import { CATEGORIES } from "../../types";
 import ItemRow from "../../components/ItemRow";
 import ItemsDetails from "../../components/ItemsDetails";
 
-export default function StepItens({ items, setItems, isDark }: { items: Item[]; setItems: React.Dispatch<React.SetStateAction<Item[]>>; isDark: boolean }) {
+export default function StepItens({ items, setItems }: { items: Item[]; setItems: React.Dispatch<React.SetStateAction<Item[]>> }) {
     const [tab, setTab] = useState<typeof CATEGORIES[number]["key"]>(CATEGORIES[0].key);
 
     const add = () => {
@@ -50,7 +50,7 @@ export default function StepItens({ items, setItems, isDark }: { items: Item[]; 
     const scrollByAmount = (dx: number) => scrollerRef.current?.scrollBy({ left: dx, behavior: "smooth" });
 
     return (
-        <section className={` ${isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-neutral-200"} rounded-2xl border p-4`}>
+        <section className="bg-card border-border rounded-2xl border p-4">
             <h3 className="font-semibold mb-3">Itens do Orçamento</h3>
             {/* Tabs */}
             <div className="relative -mx-1 px-6">
@@ -60,7 +60,7 @@ export default function StepItens({ items, setItems, isDark }: { items: Item[]; 
                     {CATEGORIES.map((c) => {
                         const active = tab === c.key;
                         return (
-                            <button key={c.key} onClick={() => setTab(c.key)} className={`whitespace-nowrap snap-start rounded-xl px-3 py-1.5 text-sm border  ${active ? (isDark ? "border-blue-500/60 bg-blue-500/10 text-blue-300" : "border-blue-500/40 bg-blue-50 text-blue-700") : isDark ? "border-neutral-700/50 text-neutral-300 hover:bg-neutral-800" : "border-neutral-300 text-neutral-700 hover:bg-neutral-100"}`} title={c.label}>
+                            <button key={c.key} onClick={() => setTab(c.key)} className={`whitespace-nowrap snap-start rounded-xl px-3 py-1.5 text-sm border ${active ? "border-primary/40 bg-primary/10 text-primary" : "border-border text-fg hover:bg-muted"}`} title={c.label}>
                                 {c.label} · {subtotalBy(c.key).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
                             </button>
                         );
@@ -68,10 +68,10 @@ export default function StepItens({ items, setItems, isDark }: { items: Item[]; 
                 </div>
 
                 {/* arrows */}
-                <button onClick={() => scrollByAmount(-160)} aria-label="Rolar para a esquerda" className={`absolute -left-1 top-1/2 -translate-y-1/2 hidden sm:flex h-7 w-7 items-center justify-center rounded-full border shadow-sm  ${canScrollLeft ? '' : 'opacity-0 pointer-events-none'} ${isDark ? 'bg-neutral-900/80 border-neutral-700 hover:bg-neutral-800' : 'bg-white/80 border-neutral-300 hover:bg-neutral-100'}`}>
+                <button onClick={() => scrollByAmount(-160)} aria-label="Rolar para a esquerda" className={`absolute -left-1 top-1/2 -translate-y-1/2 hidden sm:flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card/80 shadow-sm hover:bg-muted transition ${canScrollLeft ? '' : 'opacity-0 pointer-events-none'}`}>
                     <ChevronLeft className="w-4 h-4" />
                 </button>
-                <button onClick={() => scrollByAmount(160)} aria-label="Rolar para a direita" className={`absolute -right-1 top-1/2 -translate-y-1/2 hidden sm:flex h-7 w-7 items-center justify-center rounded-full border shadow-sm  ${canScrollRight ? '' : 'opacity-0 pointer-events-none'} ${isDark ? 'bg-neutral-900/80 border-neutral-700 hover:bg-neutral-800' : 'bg-white/80 border-neutral-300 hover:bg-neutral-100'}`}>
+                <button onClick={() => scrollByAmount(160)} aria-label="Rolar para a direita" className={`absolute -right-1 top-1/2 -translate-y-1/2 hidden sm:flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card/80 shadow-sm hover:bg-muted transition ${canScrollRight ? '' : 'opacity-0 pointer-events-none'}`}>
                     <ChevronRight className="w-4 h-4" />
                 </button>
             </div>
@@ -88,7 +88,6 @@ export default function StepItens({ items, setItems, isDark }: { items: Item[]; 
                             item={i}
                             onChange={(n) => update(i.id, n)}
                             onRemove={() => remove(i.id)}
-                            isDark={isDark}
                         />
                     ))}
             </div>
@@ -97,18 +96,14 @@ export default function StepItens({ items, setItems, isDark }: { items: Item[]; 
             <div className="mt-4 flex items-center gap-2">
                 <button
                     onClick={add}
-                    className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl border text-sm transition ${isDark ? "border-neutral-700/50 text-neutral-200 hover:bg-neutral-800"
-                        : "border-neutral-300 text-neutral-700 hover:bg-neutral-100"
-                        }`}
+                    className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-border text-fg text-sm transition hover:bg-muted"
                 >
                     <Plus className="w-4 h-4" /> Adicionar item
                 </button>
 
                 <button
                     onClick={() => setShowDetails((v) => !v)}
-                    className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl border text-sm transition ${isDark ? "border-neutral-700/50 text-neutral-200 hover:bg-neutral-800"
-                        : "border-neutral-300 text-neutral-700 hover:bg-neutral-100"
-                        }`}
+                    className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-border text-fg text-sm transition hover:bg-muted"
                 >
                     {showDetails ? "Ocultar detalhes" : `Ver detalhes (${items.length})`}
                 </button>
@@ -116,7 +111,7 @@ export default function StepItens({ items, setItems, isDark }: { items: Item[]; 
 
             {showDetails && (
                 <div className="mt-4">
-                    <ItemsDetails items={items} isDark={isDark} />
+                    <ItemsDetails items={items} />
                 </div>
             )}
 

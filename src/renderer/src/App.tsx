@@ -40,9 +40,8 @@ export default function App() {
           <button
             onClick={toggleSidebar}
             className={`absolute top-1/2 -right-5 transform -translate-y-1/2  cursor-pointer
-                  p-2 rounded-full 
-                  ${isDark ? "bg-neutral-900 hover:bg-neutral-800  text-neutral-100"
-                : "bg-white border-neutral-300 text-neutral-700"}`}
+                  p-2 rounded-full bg-card hover:bg-card/90 text-fg
+                  `}
             title={sidebarCollapsed ? "Expandir menu" : "Recolher menu"}
           >
             {sidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
@@ -64,7 +63,7 @@ export default function App() {
           </div>
 
           {/* Área rolável */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto bg-bg">
             <Outlet />
           </div>
         </main>

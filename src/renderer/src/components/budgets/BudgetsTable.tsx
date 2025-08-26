@@ -24,9 +24,9 @@ export function BudgetsTable({
 
     const statusToBadge = (status: string) => {
         const s = status.toLowerCase();
-        if (s.includes("aprov")) return "badge-status badge-aprovado";
+        if (s.includes("aprov")) return "badge badge-aprovado";
         if (s.includes("reprov")) return "badge badge-reprovado";
-        if (s.includes("venc")) return "badge badge-warning"; // mantém 'vencido' com amarelo padrão
+        if (s.includes("venc")) return "badge badge-vencido "; // mantém 'vencido' com amarelo padrão
         if (s.includes("andament")) return "badge badge-andamento";
         if (s.includes("anális") || s.includes("analise") || s.includes("analse"))
             return "badge badge-analise";
@@ -61,7 +61,7 @@ export function BudgetsTable({
                                 <td className="px-4 py-3">{r.cliente}</td>
                                 <td className="px-4 py-3 truncate max-w-[320px]">{r.projeto}</td>
                                 <td className="px-4 py-3">{currency(r.valor)}</td>
-                                <td className="px-4 py-3">
+                                <td className="px- py-3 ">
                                     <span className={statusToBadge(r.status)}>{r.status}</span>
                                 </td>
                                 <td className="px-4 py-3">{dateBR(r.emissao)}</td>

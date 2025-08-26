@@ -35,7 +35,7 @@ export default function OrcamentosPage() {
 
 
     return (
-        <div className="bg-bg">
+        <div className="bg-bg ">
             <main className="  max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
                 {/* Header local da página */}
                 <div className="flex items-center justify-between mb-6">

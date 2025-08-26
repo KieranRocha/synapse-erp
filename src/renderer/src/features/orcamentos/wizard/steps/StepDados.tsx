@@ -1,15 +1,16 @@
 import React, { useState } from "react";
 import type { Meta } from "../../types";
-import { Loader2, PlusCircle, Search } from "lucide-react";
+import { Loader2, PlusCircle, Search, UserPlus } from "lucide-react";
 import { useToastStore } from "../../../../store/toastStore";
+import { useClientesStore } from "../../../../store/clientesStore";
+import { useNavigate } from "react-router-dom";
 
-export default function StepDados({ meta, setMeta, isDark }: { meta: Meta; setMeta: (v: Meta) => void; isDark: boolean }) {
-    const input = `px-3 py-2 rounded-xl border text-sm outline-none transition ${isDark
-        ? "border-neutral-800 bg-neutral-900 focus:ring-2 focus:ring-blue-600/40"
-        : "border-neutral-300 bg-white focus:ring-2 focus:ring-blue-500/30"
-        }`;
+export default function StepDados({ meta, setMeta }: { meta: Meta; setMeta: (v: Meta) => void }) {
+    const input = "px-3 py-2 rounded-lg border border-border bg-input text-fg text-sm outline-none  focus:ring-2 focus:ring-ring/40";
 
     const pushToast = useToastStore((s: any) => s.push);
+    const { searchCliente } = useClientesStore();
+    const navigate = useNavigate();
     const [loadingCNPJ, setLoadingCNPJ] = useState(false);
     const [cnpjMsg, setCnpjMsg] = useState<string | null>(null);
 
@@ -54,37 +55,31 @@ export default function StepDados({ meta, setMeta, isDark }: { meta: Meta; setMe
             setLoadingCNPJ(true);
             setCnpjMsg(null);
 
-            const resp = await fetch(`/api/cnpj/${raw}`);
-            if (!resp.ok) throw new Error("Falha na consulta de CNPJ");
-            const data = await resp.json();
+            // Buscar cliente na base local
+            const cliente = searchCliente(raw);
 
-            const nome = data?.razao_social || data?.nome_fantasia || "";
-            const end = [data?.logradouro, data?.numero].filter(Boolean).join(", ");
-            const bairro = data?.bairro || "";
-            const cidade = data?.municipio || data?.cidade || "";
-            const uf = data?.uf || "";
-            const cep = formatCEP(data?.cep || "");
-            const atividade = data?.cnae_fiscal_descricao || "";
-            const abertura = formatDateBR(data?.data_inicio_atividade || "");
+            if (cliente) {
+                const endereco = [cliente.endereco, cliente.numero].filter(Boolean).join(", ");
 
-            setMeta({
-                ...meta,
-                cliente: nome || meta.cliente,
-                cnpj: formatCNPJ(raw),
-                clienteEndereco: end,
-                clienteBairro: bairro,
-                clienteCidade: cidade,
-                clienteUF: uf,
-                clienteCEP: cep,
-                clienteAtividade: atividade,
-                clienteAbertura: abertura,
-            });
+                setMeta({
+                    ...meta,
+                    cliente: cliente.nomeFantasia || cliente.razaoSocial,
+                    cnpj: formatCNPJ(raw),
+                    clienteEndereco: endereco,
+                    clienteBairro: cliente.bairro,
+                    clienteCidade: cliente.cidade,
+                    clienteUF: cliente.uf,
+                    clienteCEP: cliente.cep,
+                    clienteAtividade: cliente.atividade,
+                    clienteAbertura: formatDateBR(cliente.dataAbertura),
+                });
 
-            if (nome) {
-                pushToast(`Cliente preenchido com "${nome}" a partir do CNPJ.`);
+                pushToast(`Cliente "${cliente.nomeFantasia || cliente.razaoSocial}" encontrado e preenchido.`);
+            } else {
+                setCnpjMsg("Cliente não encontrado. Cadastre um novo cliente.");
             }
         } catch {
-            setCnpjMsg("Não foi possível consultar este CNPJ agora.");
+            setCnpjMsg("Erro ao buscar cliente.");
         } finally {
             setLoadingCNPJ(false);
         }
@@ -92,11 +87,11 @@ export default function StepDados({ meta, setMeta, isDark }: { meta: Meta; setMe
 
 
     const novoCliente = () => {
-        pushToast("Abrir modal de novo cliente (mock)");
+        navigate('/clientes/novo');
     };
 
     return (
-        <section className={` ${isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-neutral-200"} rounded-2xl border p-6`}>
+        <section className="bg-bg border-border text-fg rounded-2xl border p-6">
             <h3 className="font-semibold mb-4 text-lg">Dados do Orçamento</h3>
 
             {/* Layout SEM GRID: blocos verticais com grupos flexíveis */}
@@ -112,11 +107,29 @@ export default function StepDados({ meta, setMeta, isDark }: { meta: Meta; setMe
                     <label className="text-xs opacity-70">CNPJ do Cliente</label>
                     <div className="flex flex-col sm:flex-row gap-2">
                         <input className={`${input} flex-1`} inputMode="numeric" placeholder="00.000.000/0000-00" value={meta.cnpj || ""} onChange={(e) => handleCNPJChange(e.target.value)} />
-                        <button type="button" onClick={fetchCNPJ} className={`inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border text-sm transition ${isDark ? "border-neutral-700/50 text-neutral-300 hover:bg-neutral-800" : "border-neutral-300 text-neutral-700 hover:bg-neutral-100"}`} title="Buscar dados do CNPJ">
-                            {loadingCNPJ ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />} Buscar
-                        </button>
+                        <div className="flex gap-2">
+                            <button type="button" onClick={fetchCNPJ} className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-border text-fg text-sm hover:bg-muted" title="Buscar cliente cadastrado">
+                                {loadingCNPJ ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />} Buscar
+                            </button>
+                            <button type="button" onClick={novoCliente} className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-emerald-500/40 text-emerald-600 text-sm hover:bg-emerald-500/10" title="Cadastrar novo cliente">
+                                <UserPlus className="w-4 h-4" /> Novo
+                            </button>
+                        </div>
                     </div>
-                    {cnpjMsg && <p className="text-xs text-red-500 mt-1">{cnpjMsg}</p>}
+                    {cnpjMsg && (
+                        <div className="mt-1 flex items-start gap-2">
+                            <p className="text-xs text-red-500">{cnpjMsg}</p>
+                            {cnpjMsg.includes("não encontrado") && (
+                                <button
+                                    type="button"
+                                    onClick={novoCliente}
+                                    className="text-xs text-emerald-600 hover:text-emerald-700 underline"
+                                >
+                                    Cadastrar agora
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex flex-col gap-3">

@@ -8,11 +8,11 @@ function share(v: number, total: number) {
 }
 
 export default function StepRevisao({
-    items, fin, isDark
-}: { items: Item[]; fin: Fin; isDark: boolean }) {
+    items, fin
+}: { items: Item[]; fin: Fin }) {
     const { list, totals } = useMemo(() => perItemImpact(items, fin), [items, fin]);
 
-    const card = `${isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-neutral-200"} rounded-2xl border p-4`;
+    const card = "bg-card border-border rounded-2xl border p-4";
     const line = "flex items-center justify-between py-1.5";
     const sub = "text-xs opacity-70";
 
@@ -93,7 +93,7 @@ export default function StepRevisao({
                 </div>
 
                 {/* Bases de cálculo + flags */}
-                <div className={`mt-3 grid grid-cols-2 md:grid-cols-5 gap-2 text-sm ${isDark ? "text-neutral-200" : "text-neutral-800"}`}>
+                <div className="mt-3 grid grid-cols-2 md:grid-cols-5 gap-2 text-sm text-fg">
                     <div><p className="text-xs opacity-70">Base Produtos</p><p className="font-medium">{currency(baseProdutos)}</p></div>
                     <div><p className="text-xs opacity-70">ICMS (c/ redução)</p><p className="font-medium">{currency(baseICMSProp)}</p></div>
                     <div><p className="text-xs opacity-70">PIS/COFINS</p><p className="font-medium">{currency(basePISCOF)}</p></div>
@@ -102,20 +102,20 @@ export default function StepRevisao({
                 </div>
 
                 <div className="mt-2 flex flex-wrap gap-1">
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full border ${isDark ? "border-neutral-700 text-neutral-300" : "border-neutral-300 text-neutral-700"}`}>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full border border-border text-fg">
                         {fin.compoeBaseICMS ? "Adicionais compõem base ICMS" : "Adicionais fora da base ICMS"}
                     </span>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full border ${isDark ? "border-neutral-700 text-neutral-300" : "border-neutral-300 text-neutral-700"}`}>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full border border-border text-fg">
                         {fin.compoeBasePisCofins ? "Compõem base PIS/COFINS" : "Fora da base PIS/COFINS"}
                     </span>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full border ${isDark ? "border-neutral-700 text-neutral-300" : "border-neutral-300 text-neutral-700"}`}>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full border border-border text-fg">
                         {fin.compoeBaseIPI ? "Compõem base IPI" : "Fora da base IPI"}
                     </span>
                 </div>
 
                 {/* Aviso de consistência */}
                 {diffTrib > 0.01 && (
-                    <div className={`mt-3 flex items-start gap-2 text-xs ${isDark ? "text-yellow-300" : "text-yellow-700"}`}>
+                    <div className="mt-3 flex items-start gap-2 text-xs text-yellow-600">
                         <AlertTriangle className="w-4 h-4 mt-0.5" />
                         <p>
                             Diferença entre total de impostos e soma por item detectada ({currency(diffTrib)}).
@@ -132,8 +132,8 @@ export default function StepRevisao({
 
                 <div className="overflow-auto nice-scrollbar">
                     <table className="w-full text-sm min-w-[760px]">
-                        <thead className={isDark ? "bg-neutral-900/80" : "bg-white/80"}>
-                            <tr className={isDark ? "border-b border-neutral-800/60" : "border-b border-neutral-200"}>
+                        <thead className="bg-muted/50">
+                            <tr className="border-b border-border">
                                 <th className="text-left p-2">Imposto</th>
                                 <th className="text-left p-2">Alíquota</th>
                                 <th className="text-left p-2">Base usada</th>
@@ -143,15 +143,15 @@ export default function StepRevisao({
                         </thead>
                         <tbody className="">
                             {impostosRows.map((r) => (
-                                <tr key={r.key} className={isDark ? "border-b border-neutral-800/40" : "border-b border-neutral-200"}>
+                                <tr key={r.key} className="border-b border-border/40">
                                     <td className="p-2">
                                         <div className="flex items-center gap-2">
                                             <span className="font-medium">{r.key}</span>
                                             {r.badge ? (
-                                                <span className={`text-[10px] px-2 py-0.5 rounded-full border ${isDark ? "border-neutral-700 text-neutral-300" : "border-neutral-300 text-neutral-700"}`}>{r.badge}</span>
+                                                <span className="text-[10px] px-2 py-0.5 rounded-full border border-border text-fg">{r.badge}</span>
                                             ) : null}
                                             {r.extra ? (
-                                                <span className={`text-[10px] px-2 py-0.5 rounded-full border ${isDark ? "border-blue-500/40 text-blue-300" : "border-blue-500/30 text-blue-700"}`}>{r.extra}</span>
+                                                <span className="text-[10px] px-2 py-0.5 rounded-full border border-blue-500/30 text-blue-600">{r.extra}</span>
                                             ) : null}
                                         </div>
                                     </td>
@@ -164,14 +164,14 @@ export default function StepRevisao({
                             {/* sublinhas do DIFAL, se houver */}
                             {trib.difal > 0 && (difalDestino > 0 || difalOrigem > 0) && (
                                 <>
-                                    <tr className={isDark ? "border-b border-neutral-800/40" : "border-b border-neutral-200"}>
+                                    <tr className="border-b border-border/40">
                                         <td className="p-2 pl-6 opacity-80">DIFAL — Destino</td>
                                         <td className="p-2">—</td>
                                         <td className="p-2">—</td>
                                         <td className="p-2 text-right">{currency(difalDestino)}</td>
                                         <td className="p-2 text-right">{share(difalDestino, totalImpostos)}</td>
                                     </tr>
-                                    <tr className={isDark ? "border-b border-neutral-800/40" : "border-b border-neutral-200"}>
+                                    <tr className="border-b border-border/40">
                                         <td className="p-2 pl-6 opacity-80">DIFAL — Origem</td>
                                         <td className="p-2">—</td>
                                         <td className="p-2">—</td>
@@ -196,8 +196,7 @@ export default function StepRevisao({
                     <h4 className="font-semibold">Impacto por Item</h4>
                     <button
                         onClick={() => setShowTribPorItem(v => !v)}
-                        className={`inline-flex items-center gap-1 text-xs rounded-lg px-2 py-1 border transition ${isDark ? "border-neutral-700/50 text-neutral-300 hover:bg-neutral-800" : "border-neutral-300 text-neutral-700 hover:bg-neutral-100"
-                            }`}
+                        className="inline-flex items-center gap-1 text-xs rounded-lg px-2 py-1 border border-border text-fg transition hover:bg-muted"
                     >
                         {showTribPorItem ? <>Ocultar tributos <ChevronUp className="w-3.5 h-3.5" /></> : <>Ver tributos <ChevronDown className="w-3.5 h-3.5" /></>}
                     </button>
@@ -209,7 +208,7 @@ export default function StepRevisao({
                     {list.map((it) => {
                         const impostosItem = num(it.iss) + num(it.icms) + num(it.icmsST) + num(it.fcp) + num(it.fcpST) + num(it.ipi) + num(it.pis) + num(it.cofins);
                         return (
-                            <div key={it.id} className={`rounded-xl border p-3 text-sm ${isDark ? "border-neutral-800" : "border-neutral-200"}`}>
+                            <div key={it.id} className="rounded-xl border border-border p-3 text-sm">
                                 <div className="flex items-center justify-between">
                                     <p className="font-medium truncate">{it.nome || "Item"}</p>
                                     <span className="text-xs opacity-70">{(it.share * 100).toFixed(1)}%</span>

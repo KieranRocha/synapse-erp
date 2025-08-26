@@ -4,9 +4,9 @@ import { currency, num, perItemImpact } from "../../utils";
 import { buildConsideredCost, priceFromMarkup, priceFromMargin, PricingFlagsAsCost } from "../../pricing";
 
 export default function StepPrecoEMargem({
-    items, fin, isDark, meta, setMeta,
+    items, fin, meta, setMeta,
 }: {
-    items: Item[]; fin: Fin; isDark: boolean;
+    items: Item[]; fin: Fin;
     meta: { precoAprovado?: number; precoSugerido?: number;[key: string]: unknown };
     setMeta: (v: { precoAprovado?: number; precoSugerido?: number;[key: string]: unknown }) => void;
 }) {
@@ -40,8 +40,8 @@ export default function StepPrecoEMargem({
         setMeta({ ...meta, precoSugerido });     // mantém
     }, [meta.precoAprovado, precoSugerido, setMeta, meta]);
 
-    const card = `${isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-neutral-200"} rounded-2xl border p-4`;
-    const input = `px-3 py-2 rounded-xl border text-sm outline-none ${isDark ? "border-neutral-800 bg-neutral-900" : "border-neutral-300 bg-white"}`;
+    const card = "bg-card border-border rounded-2xl border p-4";
+    const input = "px-3 py-2 rounded-xl border border-border bg-input text-fg text-sm outline-none transition focus:ring-2 focus:ring-ring/40";
 
     return (
         <section className={card}>

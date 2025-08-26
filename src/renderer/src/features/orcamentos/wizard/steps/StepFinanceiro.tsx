@@ -40,15 +40,13 @@ function FieldWrap({ children }: { children: React.ReactNode }) {
 }
 
 function Input({
-    value, onChange, placeholder, isDark,
+    value, onChange, placeholder,
     type = "text", right,
 }: {
     value: string | number; onChange: (v: string) => void; placeholder?: string;
-    isDark: boolean; type?: "text" | "number"; right?: boolean;
+    type?: "text" | "number"; right?: boolean;
 }) {
-    const cls = `px-3 py-2 rounded-xl border text-sm outline-none transition ${isDark ? "border-neutral-800 bg-neutral-900 focus:ring-2 focus:ring-blue-600/40"
-        : "border-neutral-300 bg-white focus:ring-2 focus:ring-blue-500/30"
-        } ${right ? "text-right" : ""}`;
+    const cls = `px-3 py-2 rounded-xl border border-border bg-input text-fg text-sm outline-none transition focus:ring-2 focus:ring-ring/40 ${right ? "text-right" : ""}`;
     return (
         <input
             className={cls}
@@ -63,15 +61,13 @@ function Input({
 }
 
 function Select({
-    value, onChange, options, isDark, placeholder,
+    value, onChange, options, placeholder,
 }: {
     value?: string; onChange: (v: string) => void;
     options: { value: string; label: string }[] | string[];
-    isDark: boolean; placeholder?: string;
+    placeholder?: string;
 }) {
-    const cls = `px-3 py-2 rounded-xl border text-sm outline-none transition ${isDark ? "border-neutral-800 bg-neutral-900 focus:ring-2 focus:ring-blue-600/40"
-        : "border-neutral-300 bg-white focus:ring-2 focus:ring-blue-500/30"
-        }`;
+    const cls = "px-3 py-2 rounded-xl border border-border bg-input text-fg text-sm outline-none transition focus:ring-2 focus:ring-ring/40";
     const opts = Array.isArray(options) && typeof options[0] === "string"
         ? (options as string[]).map(v => ({ value: v, label: v }))
         : (options as { value: string; label: string }[]);
@@ -84,15 +80,15 @@ function Select({
 }
 
 function Checkbox({
-    checked, onChange, label, isDark,
+    checked, onChange, label,
 }: {
-    checked: boolean; onChange: (v: boolean) => void; label: string; isDark: boolean;
+    checked: boolean; onChange: (v: boolean) => void; label: string;
 }) {
     return (
-        <label className={`inline-flex items-center gap-2 text-sm ${isDark ? "text-neutral-200" : "text-neutral-700"}`}>
+        <label className="inline-flex items-center gap-2 text-sm text-fg">
             <input
                 type="checkbox"
-                className="h-4 w-4 rounded border-neutral-400"
+                className="h-4 w-4 rounded border-border"
                 checked={checked}
                 onChange={(e) => onChange(e.target.checked)}
             />
@@ -102,10 +98,10 @@ function Checkbox({
 }
 
 function Group({
-    title, children, isDark, hint,
-}: { title: string; children: React.ReactNode; isDark: boolean; hint?: string }) {
+    title, children, hint,
+}: { title: string; children: React.ReactNode; hint?: string }) {
     return (
-        <div className={`${isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-neutral-200"} rounded-2xl border p-4`}>
+        <div className="bg-card border-border rounded-2xl border p-4">
             <div className="mb-3">
                 <h3 className="font-semibold">{title}</h3>
                 {hint && <p className="text-xs opacity-70 mt-0.5">{hint}</p>}
@@ -116,8 +112,8 @@ function Group({
 }
 
 export default function StepFinanceiro({
-    fin, setFin, isDark,
-}: { fin: Fin; setFin: (v: Fin) => void; isDark: boolean }) {
+    fin, setFin,
+}: { fin: Fin; setFin: (v: Fin) => void }) {
 
     const set = <K extends keyof Fin>(k: K, v: Fin[K]) => setFin({ ...fin, [k]: v });
 
@@ -129,7 +125,7 @@ export default function StepFinanceiro({
     return (
         <section className="space-y-4">
             {/* Núcleo */}
-            <Group title="Parâmetros Fiscais" isDark={isDark} hint="Defina regime, tipo de operação e classificação. Campos seguintes se adaptam a esta seleção.">
+            <Group title="Parâmetros Fiscais" hint="Defina regime, tipo de operação e classificação. Campos seguintes se adaptam a esta seleção.">
                 <div className="flex flex-col md:flex-row gap-3">
                     <FieldWrap>
                         <Label>Regime tributário</Label>
@@ -137,7 +133,6 @@ export default function StepFinanceiro({
                             value={fin.regime}
                             onChange={(v) => set("regime", v as typeof fin.regime)}
                             options={REGIMES}
-                            isDark={isDark}
                         />
                     </FieldWrap>
 
@@ -147,7 +142,6 @@ export default function StepFinanceiro({
                             value={fin.tipoOperacao}
                             onChange={(v) => set("tipoOperacao", v as typeof fin.tipoOperacao)}
                             options={TIPOS}
-                            isDark={isDark}
                         />
                     </FieldWrap>
 
@@ -157,7 +151,6 @@ export default function StepFinanceiro({
                             value={fin.cfop ?? ""}
                             onChange={(v) => set("cfop", v)}
                             placeholder="ex.: 5102, 6108..."
-                            isDark={isDark}
                         />
                     </FieldWrap>
 
@@ -167,7 +160,6 @@ export default function StepFinanceiro({
                             value={fin.naturezaOperacao ?? ""}
                             onChange={(v) => set("naturezaOperacao", v)}
                             placeholder="ex.: Venda dentro do estado"
-                            isDark={isDark}
                         />
                     </FieldWrap>
                 </div>
@@ -176,11 +168,11 @@ export default function StepFinanceiro({
                     <div className="flex flex-col md:flex-row gap-3">
                         <FieldWrap>
                             <Label>NCM</Label>
-                            <Input value={fin.ncm ?? ""} onChange={(v) => set("ncm", v)} placeholder="ex.: 8501.20.00" isDark={isDark} />
+                            <Input value={fin.ncm ?? ""} onChange={(v) => set("ncm", v)} placeholder="ex.: 8501.20.00" />
                         </FieldWrap>
                         <FieldWrap>
                             <Label>CEST</Label>
-                            <Input value={fin.cest ?? ""} onChange={(v) => set("cest", v)} placeholder="opcional" isDark={isDark} />
+                            <Input value={fin.cest ?? ""} onChange={(v) => set("cest", v)} placeholder="opcional" />
                         </FieldWrap>
                     </div>
                 )}
@@ -189,63 +181,63 @@ export default function StepFinanceiro({
                     <div className="flex flex-col md:flex-row gap-3">
                         <FieldWrap>
                             <Label>NBS / Código de serviço</Label>
-                            <Input value={fin.nbs ?? ""} onChange={(v) => set("nbs", v)} placeholder="ex.: 1.07 (lista municipal)" isDark={isDark} />
+                            <Input value={fin.nbs ?? ""} onChange={(v) => set("nbs", v)} placeholder="ex.: 1.07 (lista municipal)" />
                         </FieldWrap>
                         <FieldWrap>
                             <Label>Município de incidência (ISS)</Label>
-                            <Input value={fin.municipioIncidencia ?? ""} onChange={(v) => set("municipioIncidencia", v)} placeholder="Cidade/UF" isDark={isDark} />
+                            <Input value={fin.municipioIncidencia ?? ""} onChange={(v) => set("municipioIncidencia", v)} placeholder="Cidade/UF" />
                         </FieldWrap>
                     </div>
                 )}
             </Group>
 
             {/* Valores comuns */}
-            <Group title="Descontos & Acréscimos" isDark={isDark}>
+            <Group title="Descontos & Acréscimos">
                 <div className="grid grid-cols-3  gap-3">
                     <FieldWrap>
                         <Label>Desconto (%)</Label>
-                        <Input type="number" right isDark={isDark} value={fin.descontoPct} onChange={(v) => set("descontoPct", num(v))} placeholder="0,00" />
+                        <Input type="number" right value={fin.descontoPct} onChange={(v) => set("descontoPct", num(v))} placeholder="0,00" />
                     </FieldWrap>
                     <FieldWrap>
                         <Label>Desconto (R$)</Label>
-                        <Input type="number" right isDark={isDark} value={fin.descontoValor} onChange={(v) => set("descontoValor", num(v))} placeholder="0,00" />
+                        <Input type="number" right value={fin.descontoValor} onChange={(v) => set("descontoValor", num(v))} placeholder="0,00" />
                     </FieldWrap>
                     <FieldWrap>
                         <Label>Frete (R$)</Label>
-                        <Input type="number" right isDark={isDark} value={fin.frete} onChange={(v) => set("frete", num(v))} placeholder="0,00" />
+                        <Input type="number" right value={fin.frete} onChange={(v) => set("frete", num(v))} placeholder="0,00" />
                     </FieldWrap>
                     <FieldWrap>
                         <Label>Seguro (R$)</Label>
-                        <Input type="number" right isDark={isDark} value={fin.seguro} onChange={(v) => set("seguro", num(v))} placeholder="0,00" />
+                        <Input type="number" right value={fin.seguro} onChange={(v) => set("seguro", num(v))} placeholder="0,00" />
                     </FieldWrap>
                     <FieldWrap>
                         <Label>Outros (R$)</Label>
-                        <Input type="number" right isDark={isDark} value={fin.outrosCustos} onChange={(v) => set("outrosCustos", num(v))} placeholder="0,00" />
+                        <Input type="number" right value={fin.outrosCustos} onChange={(v) => set("outrosCustos", num(v))} placeholder="0,00" />
                     </FieldWrap>
                 </div>
 
                 <div className="flex flex-wrap gap-4 pt-1">
-                    <Checkbox isDark={isDark} checked={fin.compoeBaseICMS} onChange={(v) => set("compoeBaseICMS", v)} label="Frete/Seguro/Outros compõem base do ICMS" />
-                    <Checkbox isDark={isDark} checked={fin.compoeBasePisCofins} onChange={(v) => set("compoeBasePisCofins", v)} label="Compõem base de PIS/COFINS" />
-                    <Checkbox isDark={isDark} checked={fin.compoeBaseIPI} onChange={(v) => set("compoeBaseIPI", v)} label="Compõem base de IPI" />
+                    <Checkbox checked={fin.compoeBaseICMS} onChange={(v) => set("compoeBaseICMS", v)} label="Frete/Seguro/Outros compõem base do ICMS" />
+                    <Checkbox checked={fin.compoeBasePisCofins} onChange={(v) => set("compoeBasePisCofins", v)} label="Compõem base de PIS/COFINS" />
+                    <Checkbox checked={fin.compoeBaseIPI} onChange={(v) => set("compoeBaseIPI", v)} label="Compõem base de IPI" />
                 </div>
             </Group>
 
             {/* Mercadorias */}
             {showMerc && (
                 <>
-                    <Group title={isSN ? "ICMS (Simples Nacional)" : "ICMS / ICMS-ST"} isDark={isDark}
+                    <Group title={isSN ? "ICMS (Simples Nacional)" : "ICMS / ICMS-ST"}
                         hint={isSN ? "Use CSOSN; ST/FCP quando aplicável por UF/CFOP." : "Para LP/LR use CST. Configure ST/MVA/FCP se a operação exigir."}>
                         <div className="flex flex-col md:flex-row gap-3">
                             {isSN ? (
                                 <FieldWrap>
                                     <Label>CSOSN</Label>
-                                    <Select value={fin.csosn} onChange={(v) => set("csosn", v)} options={CSOSN} isDark={isDark} />
+                                    <Select value={fin.csosn} onChange={(v) => set("csosn", v)} options={CSOSN} />
                                 </FieldWrap>
                             ) : (
                                 <FieldWrap>
                                     <Label>CST (ICMS)</Label>
-                                    <Select value={fin.cst} onChange={(v) => set("cst", v)} options={CST_ICMS} isDark={isDark} />
+                                    <Select value={fin.cst} onChange={(v) => set("cst", v)} options={CST_ICMS} />
                                 </FieldWrap>
                             )}
                             <FieldWrap>
@@ -254,16 +246,15 @@ export default function StepFinanceiro({
                                     value={fin.origemMercadoria ?? ""}
                                     onChange={(v) => set("origemMercadoria", v)}
                                     options={ORIGENS}
-                                    isDark={isDark}
                                 />
                             </FieldWrap>
                             <FieldWrap>
                                 <Label>ICMS (%)</Label>
-                                <Input type="number" right isDark={isDark} value={fin.icmsAliq ?? 0} onChange={(v) => set("icmsAliq", num(v))} placeholder="ex.: 18,00" />
+                                <Input type="number" right value={fin.icmsAliq ?? 0} onChange={(v) => set("icmsAliq", num(v))} placeholder="ex.: 18,00" />
                             </FieldWrap>
                             <FieldWrap>
                                 <Label>Redução de base (%)</Label>
-                                <Input type="number" right isDark={isDark} value={fin.icmsRedBasePct ?? 0} onChange={(v) => set("icmsRedBasePct", num(v))} placeholder="0,00" />
+                                <Input type="number" right value={fin.icmsRedBasePct ?? 0} onChange={(v) => set("icmsRedBasePct", num(v))} placeholder="0,00" />
                             </FieldWrap>
                         </div>
 
@@ -271,68 +262,68 @@ export default function StepFinanceiro({
                         <div className="flex flex-col md:flex-row gap-3">
                             <FieldWrap>
                                 <Label>MVA ST (%)</Label>
-                                <Input type="number" right isDark={isDark} value={fin.icmsStMva ?? 0} onChange={(v) => set("icmsStMva", num(v))} placeholder="0,00" />
+                                <Input type="number" right value={fin.icmsStMva ?? 0} onChange={(v) => set("icmsStMva", num(v))} placeholder="0,00" />
                             </FieldWrap>
                             <FieldWrap>
                                 <Label>ICMS ST (%)</Label>
-                                <Input type="number" right isDark={isDark} value={fin.icmsStAliq ?? 0} onChange={(v) => set("icmsStAliq", num(v))} placeholder="0,00" />
+                                <Input type="number" right value={fin.icmsStAliq ?? 0} onChange={(v) => set("icmsStAliq", num(v))} placeholder="0,00" />
                             </FieldWrap>
                             <FieldWrap>
                                 <Label>FCP (%)</Label>
-                                <Input type="number" right isDark={isDark} value={fin.fcpAliq ?? 0} onChange={(v) => set("fcpAliq", num(v))} placeholder="0,00" />
+                                <Input type="number" right value={fin.fcpAliq ?? 0} onChange={(v) => set("fcpAliq", num(v))} placeholder="0,00" />
                             </FieldWrap>
                             <FieldWrap>
                                 <Label>FCP ST (%)</Label>
-                                <Input type="number" right isDark={isDark} value={fin.fcpStAliq ?? 0} onChange={(v) => set("fcpStAliq", num(v))} placeholder="0,00" />
+                                <Input type="number" right value={fin.fcpStAliq ?? 0} onChange={(v) => set("fcpStAliq", num(v))} placeholder="0,00" />
                             </FieldWrap>
                         </div>
 
                         <div className="flex flex-col md:flex-row gap-3">
                             <FieldWrap>
                                 <Label>DIFAL — Alíquota interestadual (%)</Label>
-                                <Input type="number" right isDark={isDark} value={fin.difalAliqInter ?? 0} onChange={(v) => set("difalAliqInter", num(v))} placeholder="ex.: 12,00" />
+                                <Input type="number" right value={fin.difalAliqInter ?? 0} onChange={(v) => set("difalAliqInter", num(v))} placeholder="ex.: 12,00" />
                             </FieldWrap>
                             <FieldWrap>
                                 <Label>DIFAL — Alíquota interna destino (%)</Label>
-                                <Input type="number" right isDark={isDark} value={fin.difalAliqInterna ?? 0} onChange={(v) => set("difalAliqInterna", num(v))} placeholder="ex.: 18,00" />
+                                <Input type="number" right value={fin.difalAliqInterna ?? 0} onChange={(v) => set("difalAliqInterna", num(v))} placeholder="ex.: 18,00" />
                             </FieldWrap>
                             <FieldWrap>
                                 <Label>DIFAL — Partilha destino (%)</Label>
-                                <Input type="number" right isDark={isDark} value={fin.difalPartilhaDestinoPct ?? 0} onChange={(v) => set("difalPartilhaDestinoPct", num(v))} placeholder="ex.: 100,00" />
+                                <Input type="number" right value={fin.difalPartilhaDestinoPct ?? 0} onChange={(v) => set("difalPartilhaDestinoPct", num(v))} placeholder="ex.: 100,00" />
                             </FieldWrap>
                         </div>
                     </Group>
 
-                    <Group title="IPI" isDark={isDark}>
+                    <Group title="IPI">
                         <div className="flex flex-col md:flex-row gap-3">
                             <FieldWrap>
                                 <Label>CST (IPI)</Label>
-                                <Select value={fin.ipiCst} onChange={(v) => set("ipiCst", v)} options={CST_IPI} isDark={isDark} />
+                                <Select value={fin.ipiCst} onChange={(v) => set("ipiCst", v)} options={CST_IPI} />
                             </FieldWrap>
                             <FieldWrap>
                                 <Label>IPI (%)</Label>
-                                <Input type="number" right isDark={isDark} value={fin.ipiAliq ?? 0} onChange={(v) => set("ipiAliq", num(v))} placeholder="0,00" />
+                                <Input type="number" right value={fin.ipiAliq ?? 0} onChange={(v) => set("ipiAliq", num(v))} placeholder="0,00" />
                             </FieldWrap>
                         </div>
                     </Group>
 
-                    <Group title="PIS / COFINS" isDark={isDark}>
+                    <Group title="PIS / COFINS">
                         <div className="flex flex-col md:flex-row gap-3">
                             <FieldWrap>
                                 <Label>CST (PIS)</Label>
-                                <Select value={fin.pisCst} onChange={(v) => set("pisCst", v)} options={CST_PIS_COF} isDark={isDark} />
+                                <Select value={fin.pisCst} onChange={(v) => set("pisCst", v)} options={CST_PIS_COF} />
                             </FieldWrap>
                             <FieldWrap>
                                 <Label>Alíquota PIS (%)</Label>
-                                <Input type="number" right isDark={isDark} value={fin.pisAliq ?? 0} onChange={(v) => set("pisAliq", num(v))} placeholder="0,00" />
+                                <Input type="number" right value={fin.pisAliq ?? 0} onChange={(v) => set("pisAliq", num(v))} placeholder="0,00" />
                             </FieldWrap>
                             <FieldWrap>
                                 <Label>CST (COFINS)</Label>
-                                <Select value={fin.cofinsCst} onChange={(v) => set("cofinsCst", v)} options={CST_PIS_COF} isDark={isDark} />
+                                <Select value={fin.cofinsCst} onChange={(v) => set("cofinsCst", v)} options={CST_PIS_COF} />
                             </FieldWrap>
                             <FieldWrap>
                                 <Label>Alíquota COFINS (%)</Label>
-                                <Input type="number" right isDark={isDark} value={fin.cofinsAliq ?? 0} onChange={(v) => set("cofinsAliq", num(v))} placeholder="0,00" />
+                                <Input type="number" right value={fin.cofinsAliq ?? 0} onChange={(v) => set("cofinsAliq", num(v))} placeholder="0,00" />
                             </FieldWrap>
                         </div>
                     </Group>
@@ -342,12 +333,12 @@ export default function StepFinanceiro({
             {/* Serviços */}
             {showServ && (
                 <>
-                    <Group title="ISS (Serviços)" isDark={isDark}
+                    <Group title="ISS (Serviços)"
                         hint="Defina a alíquota, município de incidência e se há retenção pelo tomador.">
                         <div className="flex flex-col md:flex-row gap-3">
                             <FieldWrap>
                                 <Label>Alíquota ISS (%)</Label>
-                                <Input type="number" right isDark={isDark} value={fin.issAliq ?? 0} onChange={(v) => set("issAliq", num(v))} placeholder="ex.: 5,00" />
+                                <Input type="number" right value={fin.issAliq ?? 0} onChange={(v) => set("issAliq", num(v))} placeholder="ex.: 5,00" />
                             </FieldWrap>
                             <FieldWrap>
                                 <Label>ISS retido pelo tomador?</Label>
@@ -358,37 +349,36 @@ export default function StepFinanceiro({
                                         { value: "N", label: "Não" },
                                         { value: "S", label: "Sim" },
                                     ]}
-                                    isDark={isDark}
                                 />
                             </FieldWrap>
                         </div>
                     </Group>
 
-                    <Group title="Retenções Federais (quando aplicável)" isDark={isDark}
+                    <Group title="Retenções Federais (quando aplicável)"
                         hint="Normalmente para LP/LR. MEI e parte do SN costumam ser isentos.">
                         <div className="flex flex-col md:flex-row gap-3">
                             <FieldWrap>
                                 <Label>IRRF (%)</Label>
-                                <Input type="number" right isDark={isDark} value={fin.irrfAliq ?? 0} onChange={(v) => set("irrfAliq", num(v))} placeholder="0,00" />
+                                <Input type="number" right value={fin.irrfAliq ?? 0} onChange={(v) => set("irrfAliq", num(v))} placeholder="0,00" />
                             </FieldWrap>
                             <FieldWrap>
                                 <Label>INSS (%)</Label>
-                                <Input type="number" right isDark={isDark} value={fin.inssAliq ?? 0} onChange={(v) => set("inssAliq", num(v))} placeholder="0,00" />
+                                <Input type="number" right value={fin.inssAliq ?? 0} onChange={(v) => set("inssAliq", num(v))} placeholder="0,00" />
                             </FieldWrap>
                             <FieldWrap>
                                 <Label>CSLL (%)</Label>
-                                <Input type="number" right isDark={isDark} value={fin.csllAliq ?? 0} onChange={(v) => set("csllAliq", num(v))} placeholder="0,00" />
+                                <Input type="number" right value={fin.csllAliq ?? 0} onChange={(v) => set("csllAliq", num(v))} placeholder="0,00" />
                             </FieldWrap>
                         </div>
 
                         <div className="flex flex-col md:flex-row gap-3">
                             <FieldWrap>
                                 <Label>PIS retido (%)</Label>
-                                <Input type="number" right isDark={isDark} value={fin.pisRetAliq ?? 0} onChange={(v) => set("pisRetAliq", num(v))} placeholder="0,00" />
+                                <Input type="number" right value={fin.pisRetAliq ?? 0} onChange={(v) => set("pisRetAliq", num(v))} placeholder="0,00" />
                             </FieldWrap>
                             <FieldWrap>
                                 <Label>COFINS retido (%)</Label>
-                                <Input type="number" right isDark={isDark} value={fin.cofinsRetAliq ?? 0} onChange={(v) => set("cofinsRetAliq", num(v))} placeholder="0,00" />
+                                <Input type="number" right value={fin.cofinsRetAliq ?? 0} onChange={(v) => set("cofinsRetAliq", num(v))} placeholder="0,00" />
                             </FieldWrap>
                         </div>
                     </Group>

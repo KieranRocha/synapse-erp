@@ -14,7 +14,6 @@ import { STEPS } from "./types";
 import StepPrecoEMargem from "./wizard/steps/StepPrecoEMargem";
 
 export default function NovoOrcamentoWizard() {
-    const { isDark } = useUIStore();
     const pushToast = useToastStore((s: any) => s.push);
 
     const [step, setStep] = useState(0);
@@ -101,14 +100,14 @@ export default function NovoOrcamentoWizard() {
         <div className="">
             <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(240px,300px)] max-w-7xl mx-auto p-8 gap-6">
                 <div>
-                    <Stepper step={step} setStep={setStep} isDark={isDark} />
+                    <Stepper step={step} setStep={setStep} />
                     <div className="space-y-6 min-h-[100dvh] pb-24">
-                        {step === 0 && <StepDados meta={meta} setMeta={setMeta} isDark={isDark} />}
-                        {step === 1 && <StepItens items={items} setItems={setItems} isDark={isDark} />}
-                        {step === 2 && <StepFinanceiro fin={fin} setFin={setFin} isDark={isDark} />}
-                        {step === 3 && <StepPrecoEMargem items={items} fin={fin} isDark={isDark} meta={meta} setMeta={setMeta} />}
+                        {step === 0 && <StepDados meta={meta} setMeta={setMeta} />}
+                        {step === 1 && <StepItens items={items} setItems={setItems} />}
+                        {step === 2 && <StepFinanceiro fin={fin} setFin={setFin} />}
+                        {step === 3 && <StepPrecoEMargem items={items} fin={fin} meta={meta} setMeta={setMeta} />}
 
-                        {step === 4 && <StepRevisao items={items} fin={fin} isDark={isDark} />}
+                        {step === 4 && <StepRevisao items={items} fin={fin} />}
                     </div>
 
 
@@ -116,23 +115,21 @@ export default function NovoOrcamentoWizard() {
                 </div>
 
                 <div className="hidden  lg:block">
-                    <SummaryMini items={items} fin={fin} isDark={isDark} />
+                    <SummaryMini items={items} fin={fin} />
                 </div>
 
             </div>
             {/* Sticky action bar: resumo + navegação (tudo em linha) */}
-            <div className={`sticky bottom-0 inset-x-0 z-50 backdrop-blur border-t ${isDark ? "bg-neutral-950/60 border-neutral-800" : "bg-white/70 border-neutral-200"
-                }`}>
+            <div className="sticky bottom-0 inset-x-0 z-50 backdrop-blur border-t bg-card/70 border-border">
                 <div className=" mx-auto px-4 md:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
                     {/* Resumo inline (Subtotal | Descontos | Total) */}
                     <div className="flex items-center gap-3 text-xs sm:text-sm">
-                        <span className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-xl border ${isDark ? "border-neutral-700/50 text-neutral-200" : "border-neutral-300 text-neutral-700"
-                            }`}>
+                        <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-xl border border-border text-fg">
                             <span className="opacity-70">Subtotal:</span>
                             <b>{totals.subtotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</b>
                         </span>
 
-                        <span className={`hidden sm:inline-flex items-center gap-2 px-2.5 py-1 rounded-xl border ${isDark ? "border-neutral-700/50 text-neutral-200" : "border-neutral-300 text-neutral-700"
+                        <span className={`hidden sm:inline-flex items-center gap-2 px-2.5 py-1 rounded-xl border border-border text-fg 
                             }`}>
                             <span className="opacity-70">Descontos:</span>
                             <span className="opacity-90">
@@ -143,10 +140,9 @@ export default function NovoOrcamentoWizard() {
                             </span>
                         </span>
 
-                        <span className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-xl border ${isDark ? "border-neutral-700/50 text-neutral-200" : "border-neutral-300 text-neutral-700"
-                            }`}>
+                        <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-xl border border-border text-fg">
                             <span className="opacity-70">Total:</span>
-                            <b className={`${isDark ? "text-emerald-300" : "text-emerald-700"}`}>
+                            <b className="text-emerald-600">
                                 {totals.total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
                             </b>
                         </span>
@@ -157,8 +153,7 @@ export default function NovoOrcamentoWizard() {
                         <button
                             onClick={goPrev}
                             disabled={step === 0}
-                            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-sm transition disabled:opacity-50 disabled:cursor-not-allowed ${isDark ? "border-neutral-700/50 text-neutral-200 hover:bg-neutral-800" : "border-neutral-300 text-neutral-700 hover:bg-neutral-100"
-                                }`}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-fg text-sm transition hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Voltar"
                         >
                             <ChevronLeft className="w-4 h-4" /> Voltar
@@ -167,8 +162,7 @@ export default function NovoOrcamentoWizard() {
                         {/* Salvar rascunho */}
                         <button
 
-                            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-sm transition ${isDark ? "border-amber-500/40 text-amber-300 hover:bg-amber-500/10" : "border-amber-500/40 text-amber-700 hover:bg-amber-50"
-                                }`}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border badge-vencido text-sm transition hover:bg-amber-500/10"
                             title="Salvar rascunho"
                             type="button"
                         >
@@ -178,8 +172,7 @@ export default function NovoOrcamentoWizard() {
                         {step < STEPS.length - 1 ? (
                             <button
                                 onClick={goNext}
-                                className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-sm transition ${isDark ? "border-blue-500/40 text-blue-300 hover:bg-blue-500/10" : "border-blue-500/40 text-blue-700 hover:bg-blue-50"
-                                    }`}
+                                className="inline-flex items-center badge-analise gap-2 px-4 py-2 rounded-lg border   text-sm transition hover:bg-primary/10"
                                 title="Avançar"
                             >
                                 Avançar <ChevronRight className="w-4 h-4" />
@@ -187,8 +180,7 @@ export default function NovoOrcamentoWizard() {
                         ) : (
                             <button
                                 onClick={onSave}
-                                className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-sm transition ${isDark ? "border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10" : "border-emerald-500/40 text-emerald-700 hover:bg-emerald-50"
-                                    }`}
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-emerald-500/40 text-emerald-600 text-sm transition hover:bg-emerald-500/10"
                                 title="Salvar orçamento"
                             >
                                 <Save className="w-4 h-4" /> Salvar orçamento
