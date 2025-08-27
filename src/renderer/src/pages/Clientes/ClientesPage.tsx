@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   Plus,
   FileDown,
@@ -12,12 +12,46 @@ import {
   Phone,
   Mail as MailIcon,
   MapPin,
+  Loader2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 /** ================================================================
- *  MOCK
+ *  TYPES - Database Client Model
  *  ================================================================ */
+interface DatabaseClient {
+  id: number;
+  tipo_pessoa: 'PJ' | 'PF';
+  razao_social: string;
+  nome_fantasia?: string;
+  cpf_cnpj: string;
+  indicador_ie: 'Contribuinte' | 'Isento' | 'Não Contribuinte';
+  ie?: string;
+  im?: string;
+  suframa?: string;
+  regime_trib: 'Simples Nacional' | 'Lucro Presumido' | 'Lucro Real';
+  cep?: string;
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  cidade?: string;
+  uf?: string;
+  pais?: string;
+  email?: string;
+  telefone?: string;
+  responsavel?: string;
+  cargo?: string;
+  cond_pgto_padrao?: string;
+  limite_credito?: number;
+  vendedor_padrao?: string;
+  transporte_padrao: 'CIF' | 'FOB';
+  observacoes?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// Mapped type for display
 type Cliente = {
   id: number;
   nome: string;
@@ -30,15 +64,9 @@ type Cliente = {
   valorTotal: number;
   ultimoPedido: string; // ISO
   categoria: "industrial" | "construcao" | "agro";
+  nomeFantasia?: string;
+  limiteCredito?: number;
 };
-
-const MOCK_CLIENTES: Cliente[] = [
-  { id: 1, nome: "Metalúrgica Silva Ltda", cnpj: "12.345.678/0001-90", email: "contato@metalurgicasilva.com.br", telefone: "(11) 99999-1111", cidade: "São Paulo", uf: "SP", status: "ativo", valorTotal: 250000, ultimoPedido: "2024-08-20", categoria: "industrial" },
-  { id: 2, nome: "Construções Oliveira S.A.", cnpj: "98.765.432/0001-10", email: "projetos@oliveiraconstrucoes.com", telefone: "(21) 88888-2222", cidade: "Rio de Janeiro", uf: "RJ", status: "ativo", valorTotal: 180000, ultimoPedido: "2024-08-18", categoria: "construcao" },
-  { id: 3, nome: "Fábrica de Peças Norte", cnpj: "11.222.333/0001-44", email: "compras@fabricanorte.com.br", telefone: "(85) 77777-3333", cidade: "Fortaleza", uf: "CE", status: "inativo", valorTotal: 95000, ultimoPedido: "2024-07-15", categoria: "industrial" },
-  { id: 4, nome: "Indústria Machado Ltda", cnpj: "55.666.777/0001-88", email: "vendas@industriamachado.com", telefone: "(47) 66666-4444", cidade: "Blumenau", uf: "SC", status: "ativo", valorTotal: 320000, ultimoPedido: "2024-08-25", categoria: "industrial" },
-  { id: 5, nome: "Agropecuária Santos", cnpj: "99.888.111/0001-22", email: "info@agrosantos.com.br", telefone: "(62) 55555-5555", cidade: "Goiânia", uf: "GO", status: "ativo", valorTotal: 140000, ultimoPedido: "2024-08-22", categoria: "agro" },
-];
 
 /** ================================================================
  *  UTILS (CSS-first tokens)
@@ -49,6 +77,32 @@ const currency = (v: number) =>
 const dateBR = (iso: string) => new Date(iso).toLocaleDateString("pt-BR");
 
 type SortKey = "nome" | "-nome" | "valor" | "-valor" | "ultimo" | "-ultimo";
+
+// Helper function to map database client to display client
+const mapDatabaseClient = (dbClient: DatabaseClient): Cliente => {
+  // Generate mock data for fields not in database yet
+  const mockStatus: Cliente['status'] = Math.random() > 0.7 ? 'inativo' : Math.random() > 0.5 ? 'pendente' : 'ativo';
+  const mockCategoria: Cliente['categoria'] = Math.random() > 0.66 ? 'agro' : Math.random() > 0.5 ? 'construcao' : 'industrial';
+  const mockValorTotal = (dbClient.limite_credito || 0) * (1 + Math.random() * 3);
+  const mockUltimoPedido = new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000).toISOString();
+
+  return {
+    id: dbClient.id,
+    nome: dbClient.razao_social,
+    cnpj: dbClient.cpf_cnpj,
+    email: dbClient.email || '',
+    telefone: dbClient.telefone || '',
+    cidade: dbClient.cidade || '',
+    uf: dbClient.uf || '',
+    nomeFantasia: dbClient.nome_fantasia,
+    limiteCredito: dbClient.limite_credito,
+    // Mock data for fields not yet in database
+    status: mockStatus,
+    categoria: mockCategoria,
+    valorTotal: mockValorTotal,
+    ultimoPedido: mockUltimoPedido
+  };
+};
 
 /** ================================================================
  *  PAGE
@@ -64,18 +118,52 @@ export default function ClientesPage() {
   });
   const [sort, setSort] = useState<SortKey>("-ultimo");
   const [open, setOpen] = useState(false);
+  
+  // Backend state
+  const [databaseClients, setDatabaseClients] = useState<DatabaseClient[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const onNew = () => navigate("/clientes/novo");
   const onExport = () => console.log("Exportar (mock)");
   const onEmail = () => console.log("Enviar e-mail (mock)");
 
+  // Load clients from backend
+  const loadClients = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const clients = await window.api.clients.getAll();
+      setDatabaseClients(clients);
+      console.log('Clientes carregados do backend:', clients);
+      
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar clientes';
+      setError(errorMessage);
+      console.error('Erro ao carregar clientes:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load clients on component mount
+  useEffect(() => {
+    loadClients();
+  }, []);
+
+  // Convert database clients to display clients
+  const clients = useMemo(() => {
+    return databaseClients.map(mapDatabaseClient);
+  }, [databaseClients]);
+
   // KPIs
   const kpis = useMemo(() => {
-    const total = MOCK_CLIENTES.length;
-    const ativos = MOCK_CLIENTES.filter((c) => c.status === "ativo").length;
-    const valor = MOCK_CLIENTES.reduce((s, c) => s + c.valorTotal, 0);
+    const total = clients.length;
+    const ativos = clients.filter((c) => c.status === "ativo").length;
+    const valor = clients.reduce((s, c) => s + c.valorTotal, 0);
     const ticket = total ? valor / total : 0;
-    const recentes30 = MOCK_CLIENTES.filter(
+    const recentes30 = clients.filter(
       (c) => (Date.now() - new Date(c.ultimoPedido).getTime()) / 86400000 <= 30
     ).length;
 
@@ -87,12 +175,12 @@ export default function ClientesPage() {
       recentes30,
       ativacaoPct: total ? (ativos / total) * 100 : 0,
     };
-  }, []);
+  }, [clients]);
 
   // FILTER
   const filtered = useMemo(() => {
     const term = filtros.busca.trim().toLowerCase();
-    return MOCK_CLIENTES.filter((c) => {
+    return clients.filter((c) => {
       const matchText =
         !term ||
         c.nome.toLowerCase().includes(term) ||
@@ -106,7 +194,7 @@ export default function ClientesPage() {
 
       return matchText && matchStatus && matchCat && matchCity && matchUF;
     });
-  }, [filtros]);
+  }, [filtros, clients]);
 
   // SORT
   const rows = useMemo(() => {
@@ -134,9 +222,19 @@ export default function ClientesPage() {
             <h2 className="text-2xl font-bold text-fg">Clientes</h2>
             <p className="text-sm text-muted-foreground">
               Cadastro, histórico e relacionamento comercial
+              {loading && <span className="ml-2 inline-flex items-center gap-1 text-blue-600"><Loader2 className="w-3 h-3 animate-spin" /> Carregando...</span>}
+              {error && <span className="ml-2 text-red-600">Erro: {error}</span>}
             </p>
           </div>
           <div className="flex items-center gap-2">
+            {error && (
+              <button 
+                onClick={loadClients} 
+                className="px-3 py-2 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm hover:bg-red-100 transition"
+              >
+                🔄 Tentar Novamente
+              </button>
+            )}
             <button onClick={onNew} className="px-3 py-2 rounded-xl border border-input bg-card text-sm hover:bg-muted/50 transition">
               <Plus className="w-4 h-4 inline mr-1" /> Novo
             </button>
@@ -254,8 +352,9 @@ export default function ClientesPage() {
         {/* Lista Responsiva: Cards (mobile) + Tabela (desktop) */}
         <section className="space-y-3">
           {/* Mobile Cards */}
-          <div className="grid gap-3 sm:hidden">
-            {rows.map((c) => (
+          {!loading && !error && (
+            <div className="grid gap-3 sm:hidden">
+              {rows.map((c) => (
               <article key={c.id} className="rounded-2xl border border-border bg-card shadow-card p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -302,11 +401,13 @@ export default function ClientesPage() {
                   Último pedido: {dateBR(c.ultimoPedido)}
                 </div>
               </article>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* Desktop Table */}
-          <div className="hidden sm:block rounded-2xl border border-border bg-card/70 backdrop-blur overflow-hidden">
+          {!loading && !error && (
+            <div className="hidden sm:block rounded-2xl border border-border bg-card/70 backdrop-blur overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="text-left border-b border-border bg-muted/40">
@@ -368,19 +469,66 @@ export default function ClientesPage() {
                 </tbody>
               </table>
             </div>
-          </div>
+            </div>
+          )}
+
+          {/* Loading state */}
+          {loading && (
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="rounded-2xl border border-border bg-card p-4 animate-pulse">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                      <div className="h-4 bg-muted rounded w-48"></div>
+                      <div className="h-3 bg-muted rounded w-32"></div>
+                    </div>
+                    <div className="h-8 bg-muted rounded w-20"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Error state */}
+          {error && !loading && (
+            <div className="text-center py-12 rounded-2xl border border-red-200 bg-red-50">
+              <div className="text-red-800 font-medium mb-1">Erro ao carregar clientes</div>
+              <div className="text-sm text-red-600 mb-4">{error}</div>
+              <button 
+                onClick={loadClients}
+                className="px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition"
+              >
+                🔄 Tentar Novamente
+              </button>
+            </div>
+          )}
 
           {/* Empty state */}
-          {rows.length === 0 && (
+          {!loading && !error && rows.length === 0 && (
             <div className="text-center py-12 rounded-2xl border border-border bg-card">
-              <div className="text-fg font-medium mb-1">Nenhum cliente</div>
-              <div className="text-sm text-muted-foreground">Ajuste filtros ou o termo de busca.</div>
+              <div className="text-fg font-medium mb-1">
+                {clients.length === 0 ? 'Nenhum cliente cadastrado' : 'Nenhum cliente encontrado'}
+              </div>
+              <div className="text-sm text-muted-foreground mb-4">
+                {clients.length === 0 
+                  ? 'Comece cadastrando seu primeiro cliente.' 
+                  : 'Ajuste filtros ou o termo de busca.'
+                }
+              </div>
+              {clients.length === 0 && (
+                <button 
+                  onClick={onNew}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition"
+                >
+                  <Plus className="w-4 h-4 inline mr-1" /> Cadastrar Primeiro Cliente
+                </button>
+              )}
             </div>
           )}
         </section>
 
         <div className="text-xs opacity-70 mt-6">
-          *Mock — Integrações futuras: pipeline (última atividade), tarefas/CRM, alerta de inatividade, score de risco, exportações CSV/XLSX.
+          *Dados carregados do PostgreSQL — Campos como status, categoria e valores são temporariamente simulados. Próximas integrações: pipeline, CRM, relatórios.
         </div>
       </main>
     </div>

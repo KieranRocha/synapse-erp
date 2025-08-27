@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Client {
+  id                Int      @id @default(autoincrement())
+  tipo_pessoa       String?  @default("PJ")
+  razao_social      String   @db.VarChar(255)
+  nome_fantasia     String?  @default("") @db.VarChar(255)
+  cpf_cnpj          String   @db.VarChar(14)
+  indicador_ie      String?  @default("Contribuinte")
+  ie                String?  @default("") @db.VarChar(255)
+  im                String?  @default("") @db.VarChar(255)
+  suframa           String?  @default("") @db.VarChar(255)
+  regime_trib       String?  @default("Simples Nacional")
+  cep               String?  @default("") @db.VarChar(8)
+  logradouro        String?  @default("") @db.VarChar(255)
+  numero            String?  @default("") @db.VarChar(255)
+  complemento       String?  @default("") @db.VarChar(255)
+  bairro            String?  @default("") @db.VarChar(255)
+  cidade            String?  @default("") @db.VarChar(255)
+  uf                String?  @default("") @db.VarChar(2)
+  pais              String?  @default("Brasil") @db.VarChar(255)
+  email             String?  @default("") @db.VarChar(255)
+  telefone          String?  @default("") @db.VarChar(255)
+  responsavel       String?  @default("") @db.VarChar(255)
+  cargo             String?  @default("") @db.VarChar(255)
+  cond_pgto_padrao  String?  @default("") @db.VarChar(255)
+  limite_credito    Decimal? @default(0) @db.Decimal(10, 2)
+  vendedor_padrao   String?  @default("") @db.VarChar(255)
+  transporte_padrao String?  @default("CIF")
+  observacoes       String?  @default("")
+  created_at        DateTime @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@index([cpf_cnpj], map: "clients_cpf_cnpj_index")
+  @@index([email], map: "clients_email_index")
+  @@index([razao_social], map: "clients_razao_social_index")
+  @@map("clients")
+}
+
+model knex_migrations {
+  id             Int       @id @default(autoincrement())
+  name           String?   @db.VarChar(255)
+  batch          Int?
+  migration_time DateTime? @db.Timestamptz(6)
+}
+
+model knex_migrations_lock {
+  index     Int  @id @default(autoincrement())
+  is_locked Int?
+}

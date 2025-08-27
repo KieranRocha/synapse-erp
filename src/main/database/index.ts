@@ -1,16 +1,12 @@
-import knex from 'knex'
-import path from 'path'
+import { PrismaClient } from '@prisma/client'
 
-const knexConfig = require(path.join(process.cwd(), 'knexfile.js'))
-const environment = process.env.NODE_ENV || 'development'
-
-export const db = knex(knexConfig[environment])
+export const prisma = new PrismaClient()
 
 export async function initializeDatabase() {
   try {
-    // Run migrations
-    await db.migrate.latest()
-    console.log('Database migrations completed successfully')
+    // Test database connection
+    await prisma.$connect()
+    console.log('Database connected successfully')
     return true
   } catch (error) {
     console.error('Database initialization failed:', error)
@@ -20,7 +16,7 @@ export async function initializeDatabase() {
 
 export async function closeDatabase() {
   try {
-    await db.destroy()
+    await prisma.$disconnect()
     console.log('Database connection closed')
   } catch (error) {
     console.error('Error closing database connection:', error)

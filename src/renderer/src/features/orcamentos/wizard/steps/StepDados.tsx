@@ -1,18 +1,46 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import type { Meta } from "../../types";
-import { Loader2, PlusCircle, Search, UserPlus } from "lucide-react";
+import { Loader2, PlusCircle, Search, UserPlus, X, Check } from "lucide-react";
 import { useToastStore } from "../../../../store/toastStore";
-import { useClientesStore } from "../../../../store/clientesStore";
 import { useNavigate } from "react-router-dom";
+
+// Client interface from database
+interface DatabaseClient {
+    id: number;
+    razao_social: string;
+    nome_fantasia?: string;
+    cpf_cnpj: string;
+    email?: string;
+    telefone?: string;
+    cidade?: string;
+    uf?: string;
+    cep?: string;
+    logradouro?: string;
+    numero?: string;
+    bairro?: string;
+    created_at?: string;
+}
 
 export default function StepDados({ meta, setMeta }: { meta: Meta; setMeta: (v: Meta) => void }) {
     const input = "px-3 py-2 rounded-lg border border-border bg-input text-fg text-sm outline-none  focus:ring-2 focus:ring-ring/40";
 
     const pushToast = useToastStore((s: any) => s.push);
-    const { searchCliente } = useClientesStore();
     const navigate = useNavigate();
+
+    // Search states
+    const [searchTerm, setSearchTerm] = useState("");
+    const [searchResults, setSearchResults] = useState<DatabaseClient[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [selectedClient, setSelectedClient] = useState<DatabaseClient | null>(null);
+
+    // Legacy CNPJ search states
     const [loadingCNPJ, setLoadingCNPJ] = useState(false);
     const [cnpjMsg, setCnpjMsg] = useState<string | null>(null);
+
+    // Refs
+    const searchInputRef = useRef<HTMLInputElement>(null);
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
     const onlyDigits = (v: string) => (v || "").replace(/[^0-9]/g, "");
     const formatCNPJ = (v: string) => {
@@ -42,6 +70,121 @@ export default function StepDados({ meta, setMeta }: { meta: Meta; setMeta: (v: 
         if (isNaN(d.getTime())) return iso;
         return d.toLocaleDateString("pt-BR");
     };
+
+    // Debounced search function
+    const searchClients = async (term: string) => {
+        if (!term.trim() || term.length < 2) {
+            setSearchResults([]);
+            setShowDropdown(false);
+            return;
+        }
+
+        try {
+            setIsSearching(true);
+            const results = await window.api.clients.search(term);
+            setSearchResults(results);
+            setShowDropdown(results.length > 0);
+        } catch (error) {
+            console.error('Erro na busca:', error);
+            setSearchResults([]);
+            setShowDropdown(false);
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    // Debounce effect
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            if (searchTerm) {
+                searchClients(searchTerm);
+            }
+        }, 300); // 300ms debounce
+
+        return () => clearTimeout(timeoutId);
+    }, [searchTerm]);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node) &&
+                searchInputRef.current && !searchInputRef.current.contains(event.target as Node)) {
+                setShowDropdown(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Handle search input change
+    const handleSearchChange = (value: string) => {
+        setSearchTerm(value);
+        setSelectedClient(null);
+        setCnpjMsg(null);
+
+        // Clear meta if clearing search
+        if (!value.trim()) {
+            setMeta({
+                ...meta,
+                cliente: "",
+                cnpj: "",
+                clienteEndereco: "",
+                clienteBairro: "",
+                clienteCidade: "",
+                clienteUF: "",
+                clienteCEP: "",
+                clienteAtividade: "",
+                clienteAbertura: "",
+            });
+        }
+    };
+
+    // Handle client selection from dropdown
+    const selectClient = (client: DatabaseClient) => {
+        setSelectedClient(client);
+        setSearchTerm(client.nome_fantasia || client.razao_social);
+        setShowDropdown(false);
+
+        // Format address
+        const endereco = [client.logradouro, client.numero].filter(Boolean).join(", ");
+
+        // Fill meta data
+        setMeta({
+            ...meta,
+            cliente: client.nome_fantasia || client.razao_social,
+            cnpj: formatCNPJ(client.cpf_cnpj),
+            clienteEndereco: endereco,
+            clienteBairro: client.bairro || "",
+            clienteCidade: client.cidade || "",
+            clienteUF: client.uf || "",
+            clienteCEP: client.cep ? formatCEP(client.cep) : "",
+            clienteAtividade: "", // Not in database yet
+            clienteAbertura: client.created_at ? formatDateBR(client.created_at) : "",
+        });
+
+        pushToast(`Cliente "${client.nome_fantasia || client.razao_social}" selecionado!`);
+    };
+
+    // Clear selection
+    const clearSelection = () => {
+        setSelectedClient(null);
+        setSearchTerm("");
+        setSearchResults([]);
+        setShowDropdown(false);
+        setMeta({
+            ...meta,
+            cliente: "",
+            cnpj: "",
+            clienteEndereco: "",
+            clienteBairro: "",
+            clienteCidade: "",
+            clienteUF: "",
+            clienteCEP: "",
+            clienteAtividade: "",
+            clienteAbertura: "",
+        });
+    };
     const handleCNPJChange = (v: string) => {
         setMeta({ ...meta, cnpj: formatCNPJ(v) });
         setCnpjMsg(null);
@@ -55,30 +198,18 @@ export default function StepDados({ meta, setMeta }: { meta: Meta; setMeta: (v: 
             setLoadingCNPJ(true);
             setCnpjMsg(null);
 
-            // Buscar cliente na base local
-            const cliente = searchCliente(raw);
+            // Search by CNPJ in backend
+            const results = await window.api.clients.search(raw);
+            const cliente = results.find(c => onlyDigits(c.cpf_cnpj) === raw);
 
             if (cliente) {
-                const endereco = [cliente.endereco, cliente.numero].filter(Boolean).join(", ");
-
-                setMeta({
-                    ...meta,
-                    cliente: cliente.nomeFantasia || cliente.razaoSocial,
-                    cnpj: formatCNPJ(raw),
-                    clienteEndereco: endereco,
-                    clienteBairro: cliente.bairro,
-                    clienteCidade: cliente.cidade,
-                    clienteUF: cliente.uf,
-                    clienteCEP: cliente.cep,
-                    clienteAtividade: cliente.atividade,
-                    clienteAbertura: formatDateBR(cliente.dataAbertura),
-                });
-
-                pushToast(`Cliente "${cliente.nomeFantasia || cliente.razaoSocial}" encontrado e preenchido.`);
+                selectClient(cliente); // Use existing function
+                setCnpjMsg(null);
             } else {
                 setCnpjMsg("Cliente não encontrado. Cadastre um novo cliente.");
             }
-        } catch {
+        } catch (error) {
+            console.error('Erro ao buscar CNPJ:', error);
             setCnpjMsg("Erro ao buscar cliente.");
         } finally {
             setLoadingCNPJ(false);
@@ -102,19 +233,122 @@ export default function StepDados({ meta, setMeta }: { meta: Meta; setMeta: (v: 
                     <input className={input} placeholder="Ex: Linha de Pintura - Setor A" value={meta.nome} onChange={(e) => setMeta({ ...meta, nome: e.target.value })} />
                 </div>
 
-                {/* Linha: CNPJ + Buscar */}
-                <div className="flex flex-col gap-2">
-                    <label className="text-xs opacity-70">CNPJ do Cliente</label>
-                    <div className="flex flex-col sm:flex-row gap-2">
-                        <input className={`${input} flex-1`} inputMode="numeric" placeholder="00.000.000/0000-00" value={meta.cnpj || ""} onChange={(e) => handleCNPJChange(e.target.value)} />
-                        <div className="flex gap-2">
-                            <button type="button" onClick={fetchCNPJ} className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-border text-fg text-sm hover:bg-muted" title="Buscar cliente cadastrado">
-                                {loadingCNPJ ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />} Buscar
-                            </button>
-                            <button type="button" onClick={novoCliente} className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-emerald-500/40 text-emerald-600 text-sm hover:bg-emerald-500/10" title="Cadastrar novo cliente">
+                {/* Cliente Search with Dropdown */}
+                <div className="flex flex-col gap-2 relative ">
+                    <label className="text-xs  opacity-70">Buscar Cliente</label>
+                    <div className="relative   ">
+                        <div className="flex justify-between gap-2">
+                            <div className="  relative flex-1 mr-2">
+                                <input
+                                    ref={searchInputRef}
+                                    className={`${input} flex-1 pr-8  w-full`}
+                                    placeholder="Digite o nome ou CNPJ do cliente..."
+                                    value={searchTerm}
+                                    onChange={(e) => handleSearchChange(e.target.value)}
+                                    onFocus={() => {
+                                        if (searchResults.length > 0) {
+                                            setShowDropdown(true);
+                                        }
+                                    }}
+                                />
+
+                                {/* Search loading icon */}
+                                {isSearching && (
+                                    <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                                        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                                    </div>
+                                )}
+
+                                {/* Clear button */}
+
+
+                                {/* Selected client indicator */}
+                                {selectedClient && (
+                                    <div className="absolute right-2 top-1/2 transform -translate-y-1/2 text-emerald-600">
+                                        <Check className="w-4 h-4" />
+                                    </div>
+                                )}
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={novoCliente}
+                                className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-emerald-500/40 text-emerald-600 text-sm hover:bg-emerald-500/10"
+                                title="Cadastrar novo cliente"
+                            >
                                 <UserPlus className="w-4 h-4" /> Novo
                             </button>
                         </div>
+
+                        {/* Dropdown Results */}
+                        {showDropdown && searchResults.length > 0 && (
+                            <div
+                                ref={dropdownRef}
+                                className="absolute top-full left-0 right-0 z-50 mt-1 bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                            >
+                                {searchResults.map((client) => (
+                                    <button
+                                        key={client.id}
+                                        type="button"
+                                        onClick={() => selectClient(client)}
+                                        className="w-full px-3 py-3 text-left hover:bg-muted border-b border-border last:border-b-0 transition-colors"
+                                    >
+                                        <div className="flex justify-between items-start">
+                                            <div className="flex-1">
+                                                <div className="font-medium text-fg text-sm">
+                                                    {client.nome_fantasia || client.razao_social}
+                                                </div>
+                                                {client.nome_fantasia && (
+                                                    <div className="text-xs text-muted-foreground">
+                                                        {client.razao_social}
+                                                    </div>
+                                                )}
+                                                <div className="text-xs text-muted-foreground mt-1">
+                                                    CNPJ: {formatCNPJ(client.cpf_cnpj)}
+                                                </div>
+                                                {(client.cidade || client.uf) && (
+                                                    <div className="text-xs text-muted-foreground">
+                                                        {[client.cidade, client.uf].filter(Boolean).join(", ")}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* No results message */}
+                        {showDropdown && searchResults.length === 0 && searchTerm.length >= 2 && !isSearching && (
+                            <div
+                                ref={dropdownRef}
+                                className="absolute top-full left-0 right-0 z-50 mt-1 bg-card border border-border rounded-lg shadow-lg p-3"
+                            >
+                                <div className="text-sm text-muted-foreground text-center">
+                                    Nenhum cliente encontrado para "{searchTerm}"
+                                </div>
+                                <div className="mt-2 text-center">
+                                    <button
+                                        type="button"
+                                        onClick={novoCliente}
+                                        className="text-xs text-emerald-600 hover:text-emerald-700 underline"
+                                    >
+                                        Cadastrar novo cliente
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Legacy CNPJ Search (as fallback)
+                <div className="flex flex-col gap-2">
+                    <label className="text-xs opacity-70">CNPJ do Cliente (busca manual)</label>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                        <input className={`${input} flex-1`} inputMode="numeric" placeholder="00.000.000/0000-00" value={meta.cnpj || ""} onChange={(e) => handleCNPJChange(e.target.value)} />
+                        <button type="button" onClick={fetchCNPJ} className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-border text-fg text-sm hover:bg-muted" title="Buscar cliente cadastrado">
+                            {loadingCNPJ ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />} Buscar
+                        </button>
                     </div>
                     {cnpjMsg && (
                         <div className="mt-1 flex items-start gap-2">
@@ -130,7 +364,7 @@ export default function StepDados({ meta, setMeta }: { meta: Meta; setMeta: (v: 
                             )}
                         </div>
                     )}
-                </div>
+                </div> */}
 
                 <div className="flex flex-col gap-3">
                     <p className="text-xs opacity-70">Dados do Cliente (preenchidos automaticamente pelo CNPJ)</p>
