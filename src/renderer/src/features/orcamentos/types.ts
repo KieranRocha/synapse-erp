@@ -67,27 +67,6 @@ export interface Fin {
   cofinsRetAliq?: number
 }
 
-export interface Meta {
-  nome: string
-  cliente: string
-  cnpj?: string
-  responsavel: string
-  dataInicio: string
-  previsaoEntrega: string
-  descricao: string
-  // 👇 novos (opcionais)
-  precoSugerido?: number
-  precoAprovado?: number
-  // 👉 preenchidos automaticamente via CNPJ (somente leitura)
-  clienteEndereco?: string
-  clienteBairro?: string
-  clienteCidade?: string
-  clienteUF?: string
-  clienteCEP?: string
-  clienteAtividade?: string // CNAE principal (descrição)
-  clienteAbertura?: string // data de início de atividade (BR)
-}
-
 export const CATEGORIES = [
   { key: 'maquinas', label: 'Máquinas & Equipamentos' },
   { key: 'materiais', label: 'Materiais / Matéria-prima' },
