@@ -2,6 +2,8 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { initializeDatabase, closeDatabase } from './database'
+import { registerClientHandlers } from './handlers/clientHandlers'
 
 function createWindow(): void {
   // Create the browser window.
@@ -38,9 +40,21 @@ function createWindow(): void {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
+
+  // Initialize database
+  try {
+    await initializeDatabase()
+    console.log('Database initialized successfully')
+  } catch (error) {
+    console.error('Failed to initialize database:', error)
+    // You might want to show an error dialog here
+  }
+
+  // Register IPC handlers
+  registerClientHandlers()
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
@@ -64,7 +78,10 @@ app.whenReady().then(() => {
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
-app.on('window-all-closed', () => {
+app.on('window-all-closed', async () => {
+  // Close database connection before quitting
+  await closeDatabase()
+  
   if (process.platform !== 'darwin') {
     app.quit()
   }
