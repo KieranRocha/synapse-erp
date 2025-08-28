@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Search, Filter, ChevronDown } from "lucide-react";
-import type { Filtros, SortKey } from "../../utils/budgetFilters";
+import type { Filtros, SortKey } from "../../shared/types";
 
 /**
  * Agora sem isDark: usamos tokens semânticos do tema (bg-card, text-fg, border-border, bg-muted, etc.)

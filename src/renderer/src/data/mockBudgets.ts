@@ -1,6 +1,8 @@
+import type { Budget } from '../shared/types'
+
 export const STATUSES = ['em análise', 'aprovado', 'reprovado', 'vencido'] as const
 
-export const MOCK_BUDGETS = [
+export const MOCK_BUDGETS: Budget[] = [
   {
     id: 15,
     rev: 2,
@@ -8,7 +10,7 @@ export const MOCK_BUDGETS = [
     cliente: 'Metalúrgica Aurora',
     projeto: 'Obra 224 - Estrutura Mezanino',
     valor: 185000,
-    status: 'em análise',
+    status: 'em análise' as const,
     emissao: '2025-08-10',
     validade: '2025-08-30',
     resp: 'Kieran',
@@ -24,7 +26,7 @@ export const MOCK_BUDGETS = [
     cliente: 'Indústrias Boreal',
     projeto: 'Linha de Pintura',
     valor: 92000,
-    status: 'aprovado',
+    status: 'aprovado' as const,
     emissao: '2025-08-02',
     validade: '2025-08-20',
     resp: 'Ana',
@@ -40,7 +42,7 @@ export const MOCK_BUDGETS = [
     cliente: 'Sideral S.A.',
     projeto: 'Plataforma de Carga',
     valor: 58000,
-    status: 'reprovado',
+    status: 'reprovado' as const,
     emissao: '2025-08-01',
     validade: '2025-08-15',
     resp: 'João',
@@ -56,7 +58,7 @@ export const MOCK_BUDGETS = [
     cliente: 'Construmec',
     projeto: 'Caldeiraria - Dutos',
     valor: 142000,
-    status: 'vencido',
+    status: 'vencido' as const,
     emissao: '2025-07-15',
     validade: '2025-08-05',
     resp: 'Kieran',
@@ -72,7 +74,7 @@ export const MOCK_BUDGETS = [
     cliente: 'Metal Forte',
     projeto: 'Guindaste Colunar',
     valor: 315000,
-    status: 'em análise',
+    status: 'em análise' as const,
     emissao: '2025-08-17',
     validade: '2025-09-01',
     resp: 'Ana',
@@ -88,7 +90,7 @@ export const MOCK_BUDGETS = [
     cliente: 'AgroVale',
     projeto: 'Transportador Helicoidal',
     valor: 76000,
-    status: 'em análise',
+    status: 'em análise' as const,
     emissao: '2025-08-19',
     validade: '2025-09-05',
     resp: 'João',

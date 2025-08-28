@@ -1,4 +1,4 @@
-import type { Budget } from "../../utils/budgetFilters";
+import type { Budget } from "../../shared/types";
 import { currency, dateBR } from "../../utils/format";
 
 /**

@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import type { Budget } from '../utils/budgetFilters'
+import type { Budget } from '../shared/types'
 
 export function useKpis(data: Budget[]) {
   return useMemo(() => {
