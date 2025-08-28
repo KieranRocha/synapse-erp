@@ -13,7 +13,7 @@ import {
 import { NavLink } from "react-router-dom";
 import PropTypes from "prop-types";
 // mantém se for usar colapso global depois
-import { useUIStore } from "../../store/uiStore";
+import { useUIStore } from "../../../store/uiStore";
 
 type NavItemProps = {
   icon: React.ComponentType<{ className?: string }>;
