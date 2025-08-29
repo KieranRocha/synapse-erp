@@ -68,8 +68,10 @@ export interface Fin {
 }
 
 export interface Meta {
+  numero: string
   nome: string
   cliente: string
+  clienteId?: number
   cnpj?: string
   responsavel: string
   dataInicio: string

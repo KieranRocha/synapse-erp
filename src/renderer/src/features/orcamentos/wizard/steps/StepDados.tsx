@@ -152,6 +152,7 @@ export default function StepDados({ meta, setMeta }: { meta: Meta; setMeta: (v: 
         // Fill meta data
         setMeta({
             ...meta,
+            clienteId: client.id,
             cliente: client.nome_fantasia || client.razao_social,
             cnpj: formatCNPJ(client.cpf_cnpj),
             clienteEndereco: endereco,
@@ -174,6 +175,7 @@ export default function StepDados({ meta, setMeta }: { meta: Meta; setMeta: (v: 
         setShowDropdown(false);
         setMeta({
             ...meta,
+            clienteId: undefined,
             cliente: "",
             cnpj: "",
             clienteEndereco: "",
@@ -227,10 +229,16 @@ export default function StepDados({ meta, setMeta }: { meta: Meta; setMeta: (v: 
 
             {/* Layout SEM GRID: blocos verticais com grupos flexíveis */}
             <div className="space-y-5">
-                {/* Linha: Nome do orçamento */}
-                <div className="flex flex-col">
-                    <label className="text-xs opacity-70 mb-1">Nome do Orçamento *</label>
-                    <input className={input} placeholder="Ex: Linha de Pintura - Setor A" value={meta.nome} onChange={(e) => setMeta({ ...meta, nome: e.target.value })} />
+                {/* Linha: Número e Nome do orçamento */}
+                <div className="flex flex-col md:flex-row gap-3">
+                    <div className="w-full md:w-48 flex flex-col">
+                        <label className="text-xs opacity-70 mb-1">Número do Orçamento *</label>
+                        <input className={input} placeholder="Ex: ORC-001" value={meta.numero} onChange={(e) => setMeta({ ...meta, numero: e.target.value })} />
+                    </div>
+                    <div className="flex-1 flex flex-col">
+                        <label className="text-xs opacity-70 mb-1">Nome do Orçamento *</label>
+                        <input className={input} placeholder="Ex: Linha de Pintura - Setor A" value={meta.nome} onChange={(e) => setMeta({ ...meta, nome: e.target.value })} />
+                    </div>
                 </div>
 
                 {/* Cliente Search with Dropdown */}

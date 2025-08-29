@@ -35,10 +35,13 @@ export default function StepPrecoEMargem({
         ? priceFromMarkup(costConsiderado, pricing.markupPct)
         : priceFromMargin(costConsiderado, pricing.marginPct);
 
-    // salva direto no meta (aproveita seu store/submit)
+    // Atualiza apenas quando o precoSugerido mudar, evitando loop de render
     useEffect(() => {
-        setMeta({ ...meta, precoSugerido });     // mantém
-    }, [meta.precoAprovado, precoSugerido, setMeta, meta]);
+        setMeta((prev: any) => {
+            if (prev?.precoSugerido === precoSugerido) return prev;
+            return { ...prev, precoSugerido };
+        });
+    }, [precoSugerido]);
 
     const card = "bg-card border-border rounded-2xl border p-4";
     const input = "px-3 py-2 rounded-xl border border-border bg-input text-fg text-sm outline-none transition focus:ring-2 focus:ring-ring/40";

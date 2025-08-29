@@ -7,6 +7,31 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Enums for budgets
+enum BudgetStatus {
+  DRAFT
+  SENT
+  APPROVED
+  REJECTED
+  ARCHIVED
+}
+
+enum RegimeEnum {
+  SN
+  LP
+  LR
+}
+
+enum TipoOperacaoEnum {
+  MERCADORIA
+  SERVICO
+}
+
+enum PricingMethodEnum {
+  MARKUP
+  MARGIN
+}
+
 model Client {
   id                Int      @id @default(autoincrement())
   tipo_pessoa       String?  @default("PJ")
@@ -42,6 +67,7 @@ model Client {
   @@index([email], map: "clients_email_index")
   @@index([razao_social], map: "clients_razao_social_index")
   @@map("clients")
+  budgets           Budget[]
 }
 
 model knex_migrations {
@@ -54,4 +80,128 @@ model knex_migrations {
 model knex_migrations_lock {
   index     Int  @id @default(autoincrement())
   is_locked Int?
+}
+
+// Budgets (Orçamentos)
+model Budget {
+  id                     Int                 @id @default(autoincrement())
+  clientId               Int?
+  client                 Client?             @relation(fields: [clientId], references: [id])
+
+  numero                 String              @db.VarChar(32)
+  name                   String              @db.VarChar(255)
+  description            String?
+  responsavel            String?             @db.VarChar(255)
+  startDate              DateTime?           @db.Timestamptz(6)
+  deliveryDate           DateTime?           @db.Timestamptz(6)
+  status                 BudgetStatus        @default(DRAFT)
+
+  // Pricing snapshot
+  precoSugerido          Decimal?            @db.Decimal(14, 2)
+  precoAprovado          Decimal?            @db.Decimal(14, 2)
+  pricingMethod          PricingMethodEnum?
+  markupPct              Decimal?            @db.Decimal(7, 4)
+  marginPct              Decimal?            @db.Decimal(7, 4)
+  considerICMSasCost     Boolean             @default(false)
+  considerPISCOFINSasCost Boolean            @default(false)
+  considerIPIasCost      Boolean             @default(false)
+  considerISSasCost      Boolean             @default(false)
+
+  // Relations
+  items                  BudgetItem[]
+  financial              BudgetFinancial?
+
+  created_at             DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime            @updatedAt @db.Timestamptz(6)
+
+  @@index([clientId, status, created_at], map: "budgets_client_status_created_idx")
+  @@map("budgets")
+}
+
+model BudgetItem {
+  id         Int      @id @default(autoincrement())
+  budgetId   Int
+  budget     Budget   @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+
+  name       String   @db.VarChar(255)
+  unit       String   @db.VarChar(32)
+  quantity   Decimal  @db.Decimal(14, 4)
+  unitPrice  Decimal  @db.Decimal(14, 4)
+  category   String   @db.VarChar(64)
+  sortIndex  Int      @default(0)
+
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @updatedAt @db.Timestamptz(6)
+
+  @@index([budgetId], map: "budget_items_budget_id_idx")
+  @@map("budget_items")
+}
+
+model BudgetFinancial {
+  id                       Int               @id @default(autoincrement())
+  budgetId                 Int               @unique
+  budget                   Budget            @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+
+  regime                   RegimeEnum
+  tipoOperacao             TipoOperacaoEnum
+  cfop                     String?            @db.VarChar(32)
+  naturezaOperacao         String?            @db.VarChar(255)
+
+  // mercadorias
+  ncm                      String?            @db.VarChar(32)
+  cest                     String?            @db.VarChar(16)
+  // servicos
+  nbs                      String?            @db.VarChar(32)
+
+  precoVenda               Decimal?           @db.Decimal(14, 2)
+
+  // comuns
+  descontoPct              Decimal            @default(0) @db.Decimal(7, 4)
+  descontoValor            Decimal            @default(0) @db.Decimal(14, 2)
+  frete                    Decimal            @default(0) @db.Decimal(14, 2)
+  seguro                   Decimal            @default(0) @db.Decimal(14, 2)
+  outrosCustos             Decimal            @default(0) @db.Decimal(14, 2)
+
+  compoeBaseICMS           Boolean            @default(false)
+  compoeBasePisCofins      Boolean            @default(false)
+  compoeBaseIPI            Boolean            @default(false)
+
+  // ICMS / ICMS-ST / FCP / DIFAL
+  cst                      String?            @db.VarChar(8)
+  csosn                    String?            @db.VarChar(8)
+  origemMercadoria         String?            @db.VarChar(8)
+  icmsAliq                 Decimal?           @db.Decimal(7, 4)
+  icmsRedBasePct           Decimal?           @db.Decimal(7, 4)
+  icmsStMva                Decimal?           @db.Decimal(7, 4)
+  icmsStAliq               Decimal?           @db.Decimal(7, 4)
+  fcpAliq                  Decimal?           @db.Decimal(7, 4)
+  fcpStAliq                Decimal?           @db.Decimal(7, 4)
+  difalAliqInter           Decimal?           @db.Decimal(7, 4)
+  difalAliqInterna         Decimal?           @db.Decimal(7, 4)
+  difalPartilhaDestinoPct  Decimal?           @db.Decimal(7, 4)
+
+  // IPI
+  ipiCst                   String?            @db.VarChar(8)
+  ipiAliq                  Decimal?           @db.Decimal(7, 4)
+
+  // PIS/COFINS
+  pisCst                   String?            @db.VarChar(8)
+  pisAliq                  Decimal?           @db.Decimal(7, 4)
+  cofinsCst                String?            @db.VarChar(8)
+  cofinsAliq               Decimal?           @db.Decimal(7, 4)
+
+  // ISS e retenções (serviço)
+  municipioIncidencia      String?            @db.VarChar(255)
+  issAliq                  Decimal?           @db.Decimal(7, 4)
+  issRetido                Boolean?           @default(false)
+  irrfAliq                 Decimal?           @db.Decimal(7, 4)
+  inssAliq                 Decimal?           @db.Decimal(7, 4)
+  csllAliq                 Decimal?           @db.Decimal(7, 4)
+  pisRetAliq               Decimal?           @db.Decimal(7, 4)
+  cofinsRetAliq            Decimal?           @db.Decimal(7, 4)
+
+  created_at               DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime           @updatedAt @db.Timestamptz(6)
+
+  @@map("budget_financials")
 }

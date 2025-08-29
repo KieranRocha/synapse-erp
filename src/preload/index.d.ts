@@ -11,6 +11,14 @@ declare global {
         update: (id: number, clientData: any) => Promise<any | null>
         delete: (id: number) => Promise<boolean>
         search: (searchTerm: string) => Promise<any[]>
+      },
+      budgets: {
+        getAll: () => Promise<any[]>
+        getById: (id: number) => Promise<any | null>
+        create: (payload: any) => Promise<any>
+        update: (id: number, payload: any) => Promise<any | null>
+        delete: (id: number) => Promise<boolean>
+        search: (searchTerm: string) => Promise<any[]>
       }
     }
   }
