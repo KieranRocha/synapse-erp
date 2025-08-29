@@ -67,6 +67,9 @@ npx knex migrate:latest
 - `src/main/models/Client.ts` - Model do Cliente
 - `src/main/services/ClientService.ts` - Serviços de negócio
 - `src/main/handlers/clientHandlers.ts` - Handlers IPC para comunicação com o frontend
+- `src/main/models/Budget.ts` - Model de Orçamento
+- `src/main/services/BudgetService.ts` - Serviços de orçamento
+- `src/main/handlers/budgetHandlers.ts` - Handlers IPC para orçamentos
 
 ### API Disponível
 
@@ -78,6 +81,11 @@ O backend expõe as seguintes operações via IPC:
 - `clients:update` - Atualizar cliente
 - `clients:delete` - Deletar cliente
 - `clients:search` - Buscar clientes por termo
+- `budgets:getAll` - Buscar todos os orçamentos
+- `budgets:getById` - Buscar orçamento por ID
+- `budgets:create` - Criar novo orçamento
+- `budgets:update` - Atualizar orçamento
+- `budgets:delete` - Deletar orçamento
 
 ### Uso no Frontend
 

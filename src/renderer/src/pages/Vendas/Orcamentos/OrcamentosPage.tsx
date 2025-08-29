@@ -1,7 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Plus, FileDown, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { MOCK_BUDGETS } from "../../../data/mockBudgets";
 import { useKpis } from "../../../shared/hooks";
 import type { Budget, Filtros, SortKey } from "../../../shared/types";
 import { filterBudgets, sortBudgets } from "../../../shared/utils";
@@ -19,12 +18,16 @@ export default function OrcamentosPage() {
     const [searchTop] = useState("");
     const [filtros, setFiltros] = useState<Filtros>({ busca: "", status: "", inicio: "", fim: "", cliente: "", projeto: "", min: "" });
     const [sort, setSort] = useState<SortKey>("-emissao");
+    const [budgets, setBudgets] = useState<Budget[]>([]);
 
+    useEffect(() => {
+        window.api.budgets.getAll().then(setBudgets);
+    }, []);
 
     const filtered = useMemo(() => {
-        const f = filterBudgets(MOCK_BUDGETS, { ...filtros, busca: filtros.busca || searchTop });
+        const f = filterBudgets(budgets, { ...filtros, busca: filtros.busca || searchTop });
         return sortBudgets(f, sort);
-    }, [filtros, sort, searchTop]);
+    }, [budgets, filtros, sort, searchTop]);
 
 
     const kpis = useKpis(filtered);
@@ -68,7 +71,7 @@ export default function OrcamentosPage() {
 
 
                 <div className="text-xs opacity-70 mt-6">
-                    *Mock — Integrações futuras: Estoque (disponibilidade), Compras (cotações X), E-mail (envio automático), PDF (modelo de proposta), Revisões & histórico completo.
+                    *Integrações futuras: Estoque (disponibilidade), Compras (cotações X), E-mail (envio automático), PDF (modelo de proposta), Revisões & histórico completo.
                 </div>
             </main>
         </div>
