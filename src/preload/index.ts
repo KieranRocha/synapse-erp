@@ -10,6 +10,13 @@ const api = {
     update: (id: number, clientData: any) => ipcRenderer.invoke('clients:update', id, clientData),
     delete: (id: number) => ipcRenderer.invoke('clients:delete', id),
     search: (searchTerm: string) => ipcRenderer.invoke('clients:search', searchTerm)
+  },
+  budgets: {
+    getAll: () => ipcRenderer.invoke('budgets:getAll'),
+    getById: (id: number) => ipcRenderer.invoke('budgets:getById', id),
+    create: (budgetData: any) => ipcRenderer.invoke('budgets:create', budgetData),
+    update: (id: number, budgetData: any) => ipcRenderer.invoke('budgets:update', id, budgetData),
+    delete: (id: number) => ipcRenderer.invoke('budgets:delete', id)
   }
 }
 

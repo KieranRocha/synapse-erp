@@ -44,6 +44,43 @@ model Client {
   @@map("clients")
 }
 
+model Budget {
+  id          Int          @id @default(autoincrement())
+  rev         Int          @default(0)
+  numero      String       @unique @db.VarChar(255)
+  cliente     String       @db.VarChar(255)
+  projeto     String       @db.VarChar(255)
+  valor       Decimal      @db.Decimal(10, 2)
+  status      String       @db.VarChar(50)
+  emissao     DateTime     @db.Date
+  validade    DateTime     @db.Date
+  resp        String       @db.VarChar(255)
+  margem      Decimal      @db.Decimal(5, 2)
+  slaDias     Int?
+  enviado     Boolean      @default(false)
+  respondeuEm DateTime?    @db.Date
+  created_at  DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime     @default(now()) @updatedAt @db.Timestamptz(6)
+
+  items       BudgetItem[]
+
+  @@map("budgets")
+}
+
+model BudgetItem {
+  id        Int     @id @default(autoincrement())
+  budget    Budget  @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  budgetId  Int
+  categoria String  @db.VarChar(255)
+  codigo    String? @db.VarChar(255)
+  nome      String  @db.VarChar(255)
+  un        String  @db.VarChar(20)
+  qtd       Decimal @db.Decimal(10, 2)
+  preco     Decimal @db.Decimal(10, 2)
+
+  @@map("budget_items")
+}
+
 model knex_migrations {
   id             Int       @id @default(autoincrement())
   name           String?   @db.VarChar(255)
