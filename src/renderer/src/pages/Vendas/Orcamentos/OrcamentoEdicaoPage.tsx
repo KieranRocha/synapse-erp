@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useUIStore } from "../../../store/uiStore";
 import { useToastStore } from "../../../store/toastStore";
 import ToastViewport from "../../../components/Ui/ToastViewport";
@@ -152,6 +152,12 @@ export default function OrcamentoEdicaoPagePlus() {
   const { isDark } = useUIStore();
   const pushToast = useToastStore((s: any) => s.push);
   const navigate = useNavigate();
+  const { id } = useParams();
+
+  // Backend loading/error state and snapshot
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [backend, setBackend] = useState<any>(null);
 
   // Base mock subtotal to permitir KPIs (troque para seu cálculo real)
   const subtotal = (MOCK_DETALHE as any)?.subtotal ?? 10000;
@@ -188,6 +194,41 @@ export default function OrcamentoEdicaoPagePlus() {
     [isDark]
   );
 
+  // Load budget by id and hydrate minimal fields
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      if (!id) {
+        setError('ID do orçamento não informado');
+        setLoading(false);
+        return;
+      }
+      try {
+        setLoading(true);
+        const bid = Number(id);
+        const data = await window.api.budgets.getById(bid);
+        if (!mounted) return;
+        if (!data) {
+          setError('Orçamento não encontrado');
+        } else {
+          setBackend(data);
+          // Mapear campos básicos
+          setProjeto(data.name || '');
+          setResponsavel((data.responsavel as any) || '');
+          setEmissao(data.startDate ? new Date(data.startDate).toISOString().slice(0,10) : '');
+          setValidade(data.deliveryDate ? new Date(data.deliveryDate).toISOString().slice(0,10) : '');
+        }
+      } catch (e: any) {
+        if (!mounted) return;
+        setError(e?.message || 'Erro ao carregar orçamento');
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+    load();
+    return () => { mounted = false };
+  }, [id]);
+
 
   // Derived values
   const totalSemImposto = useMemo(() => subtotal * (1 + (margem || 0)), [subtotal, margem]);
@@ -214,7 +255,7 @@ export default function OrcamentoEdicaoPagePlus() {
 
   // Keyboard shortcuts: Ctrl+S to salvar, Esc para voltar
   const onSaveRef = useRef<() => void>();
-  onSaveRef.current = handleSave;
+  onSaveRef.current = handleSaveIPC;
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
@@ -261,6 +302,36 @@ export default function OrcamentoEdicaoPagePlus() {
     }, 550);
   }
 
+  async function handleSaveIPC() {
+    if (!validate()) {
+      pushToast("Revise os campos destacados.");
+      return;
+    }
+    try {
+      setSaving(true);
+      if (id) {
+        await window.api.budgets.update(Number(id), {
+          meta: {
+            nome: projeto,
+            responsavel,
+            dataInicio: emissao || undefined,
+            previsaoEntrega: validade || undefined,
+            descricao: observacoes || undefined,
+          }
+        });
+      } else {
+        await new Promise((r) => setTimeout(r, 300));
+      }
+      setDirty(false);
+      setLastSavedAt(new Date().toLocaleTimeString("pt-BR"));
+      pushToast("Orçamento salvo");
+    } catch (e) {
+      pushToast("Erro ao salvar orçamento");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   function onCancel() {
     if (dirty && !confirm("Existem alterações não salvas. Deseja realmente sair?")) return;
     navigate(-1);
@@ -289,6 +360,13 @@ export default function OrcamentoEdicaoPagePlus() {
     : "rounded-2xl border border-neutral-200 bg-white";
   return (
     <div className={pageCls}>
+      {/* Loading / Error */}
+      {loading && (
+        <div className="max-w-6xl mx-auto w-full px-4 md:px-6 lg:px-8 py-2 text-sm text-neutral-400">Carregando orçamento...</div>
+      )}
+      {error && (
+        <div className="max-w-6xl mx-auto w-full px-4 md:px-6 lg:px-8 py-2 text-sm text-rose-400">{error}</div>
+      )}
       <main className="max-w-6xl mx-auto w-full px-4 md:px-6 lg:px-8 py-6">
         {/* Top Bar */}
         <div className="flex items-center justify-between gap-3 mb-5">
@@ -303,6 +381,9 @@ export default function OrcamentoEdicaoPagePlus() {
             <div>
               <h1 className="text-xl font-semibold leading-tight">Editar Orçamento</h1>
               <div className="flex items-center gap-2 mt-1">
+                {backend && (
+                  <span className="text-xs text-neutral-400">#{backend.numero} — {backend.name}</span>
+                )}
                 <StatusPill value={status} />
                 {diasRestantes !== null && (
                   <span className={`text-xs px-2 py-0.5 rounded-lg border ${diasRestantes <= 0 ? "border-rose-500/40 text-rose-400" : "border-neutral-600/40 text-neutral-400"}`}>
@@ -334,7 +415,7 @@ export default function OrcamentoEdicaoPagePlus() {
               <Copy className="h-4 w-4" /> Duplicar
             </button>
             <button
-              onClick={handleSave}
+              onClick={handleSaveIPC}
               className="px-4 py-2 rounded-xl border border-neutral-700/40 bg-transparent text-sm hover:bg-neutral-100/5 inline-flex items-center gap-2"
               disabled={saving}
             >
@@ -579,7 +660,7 @@ export default function OrcamentoEdicaoPagePlus() {
           </div>
           <div className="flex items-center gap-2">
             <button onClick={onCancel} className="px-3 py-2 rounded-xl border border-neutral-700/40 hover:bg-neutral-100/5 text-sm">Cancelar</button>
-            <button onClick={handleSave} disabled={saving} className="px-4 py-2 rounded-xl border border-neutral-700/40 hover:bg-neutral-100/5 text-sm inline-flex items-center gap-2">
+            <button onClick={handleSaveIPC} disabled={saving} className="px-4 py-2 rounded-xl border border-neutral-700/40 hover:bg-neutral-100/5 text-sm inline-flex items-center gap-2">
               {saving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Salvar alterações
             </button>
           </div>

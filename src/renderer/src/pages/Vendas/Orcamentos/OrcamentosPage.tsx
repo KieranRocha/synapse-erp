@@ -54,7 +54,7 @@ export default function OrcamentosPage() {
             const validadeIso = b.deliveryDate ? new Date(b.deliveryDate).toISOString() : addDays(new Date(emissaoIso), 15)
             const nomeCliente = b.client?.nome_fantasia || b.client?.razao_social || '—'
             const margem = typeof b.marginPct === 'number' ? Number(b.marginPct) : 0
-            const slaDias = (b.startDate && b.deliveryDate) ? Math.max(0, Math.ceil((+new Date(b.deliveryDate) - +new Date(b.startDate)) / (1000*60*60*24))) : 0
+            const slaDias = (b.startDate && b.deliveryDate) ? Math.max(0, Math.ceil((+new Date(b.deliveryDate) - +new Date(b.startDate)) / (1000 * 60 * 60 * 24))) : 0
             return {
                 id: b.id,
                 rev: 0,
@@ -72,14 +72,14 @@ export default function OrcamentosPage() {
                 respondeuEm: null,
             }
         }
-        ;(async () => {
-            try {
-                const list = await window.api.budgets.getAll()
-                setRows(list.map(toUi))
-            } catch (e) {
-                console.error('Falha ao carregar orçamentos', e)
-            }
-        })()
+            ; (async () => {
+                try {
+                    const list = await window.api.budgets.getAll()
+                    setRows(list.map(toUi))
+                } catch (e) {
+                    console.error('Falha ao carregar orçamentos', e)
+                }
+            })()
     }, [])
     const onNew = () => navigate("/vendas/orcamentos/novo");
     const onExport = () => pushToast("Exportar (mock)");
@@ -114,7 +114,7 @@ export default function OrcamentosPage() {
                 <BudgetsTable
                     rows={filtered}
                     onView={onView}
-                    onEdit={(r) => pushToast(`Editar ${r.numero} (mock)`)}
+                    onEdit={() => navigate("/vendas/orcamentos/2/editar")}
                     onDuplicate={(r) => pushToast(`Duplicar ${r.numero} (mock)`)}
                     onPdf={(r) => pushToast(`Gerar PDF ${r.numero} (mock)`)}
                 />

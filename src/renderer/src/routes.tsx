@@ -32,7 +32,7 @@ export const routes: RouteObject[] = [
             { path: "vendas/orcamentos", element: <OrcamentosPage /> },
             { path: "vendas/orcamentos/novo", element: <NovoOrcamentoPage /> },
             { path: "vendas/orcamentos/detalhe", element: <OrcamentoDetalhePage /> },
-            { path: "vendas/orcamentos/editar", element: <OrcamentoEdicaoPage /> },
+            { path: "vendas/orcamentos/:id/editar", element: <OrcamentoEdicaoPage /> },
             { path: "clientes/novo", element: <NovoClientePage /> },
             { path: "projetos", element: <BeautifulPage title="Projetos" subtitle="Planejamento, produção, instalação e entrega." /> },
             { path: "estoque", element: <BeautifulPage title="BOM & Estoque" subtitle="Materiais, itens e estrutura de produto." /> },
