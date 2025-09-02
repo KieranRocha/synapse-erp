@@ -84,7 +84,7 @@ export default function OrcamentosPage() {
     const onNew = () => navigate("/vendas/orcamentos/novo");
     const onExport = () => pushToast("Exportar (mock)");
     const onEmail = () => pushToast("Enviar e-mail (mock)");
-    const onView = (r: Budget) => navigate(`/vendas/orcamentos/detalhe?num=${r.numero}`);
+    const onView = (r: Budget) => navigate(`/vendas/orcamentos/${r.id}`);
 
 
 
@@ -105,10 +105,8 @@ export default function OrcamentosPage() {
                 {/* KPIs */}
                 <KpiCards kpis={kpis} />
 
-
                 {/* Filtros */}
                 <FiltersBar filtros={filtros} setFiltros={setFiltros} sort={sort} onSortChange={setSort} />
-
 
                 {/* Tabela */}
                 <BudgetsTable

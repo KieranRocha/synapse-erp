@@ -80,6 +80,7 @@ export interface BudgetFinancial {
 export interface Budget {
   id: number
   clientId?: number | null
+  client?: any | null // Client data when included
   numero: string
   name: string
   description?: string | null
@@ -154,9 +155,20 @@ function serializeFinancial(fin: PrismaBudgetFinancial | null): BudgetFinancial 
   }
 }
 
-function serializeBudget(b: PrismaBudget & { items: PrismaBudgetItem[]; financial: PrismaBudgetFinancial | null }): Budget {
+function serializeClient(raw: any): any {
+  if (!raw) return null
+  // Convert Prisma Decimal fields and keep dates as Date
+  const out: any = { ...raw }
+  if (Object.prototype.hasOwnProperty.call(out, 'limite_credito')) {
+    out.limite_credito = out.limite_credito != null ? Number(out.limite_credito) : null
+  }
+  return out
+}
+
+function serializeBudget(b: PrismaBudget & { items: PrismaBudgetItem[]; financial: PrismaBudgetFinancial | null; client?: any }): Budget {
   return {
     ...b,
+    client: serializeClient(b.client),
     precoSugerido: b.precoSugerido != null ? Number(b.precoSugerido) : null,
     precoAprovado: b.precoAprovado != null ? Number(b.precoAprovado) : null,
     markupPct: b.markupPct != null ? Number(b.markupPct) : null,
@@ -178,7 +190,7 @@ export class BudgetModel {
   static async findById(id: number): Promise<Budget | null> {
     const row = await prisma.budget.findUnique({
       where: { id },
-      include: { items: true, financial: true }
+      include: { items: true, financial: true, client: true }
     })
     return row ? serializeBudget(row) : null
   }
