@@ -11,7 +11,6 @@ import {
   Factory,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
-import PropTypes from "prop-types";
 // mantém se for usar colapso global depois
 import { useUIStore } from "../../store/uiStore";
 
@@ -60,19 +59,21 @@ function NavItem({ icon: Icon, text, to, badge, end = false, collapsed }: NavIte
   );
 }
 
+interface SidebarProps {
+  projetos?: Array<{ status?: string }>;
+  orcamentos?: Array<{ status?: string }>;
+  basePath?: string;
+  className?: string;
+  collapsed?: boolean;
+}
+
 export default function Sidebar({
   projetos = [],
   orcamentos = [],
   basePath = "",
   className = "",
   collapsed = false,
-}: {
-  projetos?: Array<{ status?: string }>;
-  orcamentos?: Array<{ status?: string }>;
-  basePath?: string;
-  className?: string;
-  collapsed?: boolean;
-}) {
+}: SidebarProps) {
   const prefix = basePath.replace(/\/$/, "");
   // reservado se quiser ligar com store global:
   const { toggleSidebar } = useUIStore();
@@ -138,11 +139,3 @@ export default function Sidebar({
     </aside>
   );
 }
-
-Sidebar.propTypes = {
-  projetos: PropTypes.array,
-  orcamentos: PropTypes.array,
-  basePath: PropTypes.string,
-  className: PropTypes.string,
-  collapsed: PropTypes.bool,
-};
