@@ -1,2 +1,6 @@
-// export * from './ui' // Removed during cleanup
+// Shared Components - Organized by category
+export * from './ui'
 export * from './forms'
+export * from './layout'
+export * from './feedback'
+export * from './navigation'

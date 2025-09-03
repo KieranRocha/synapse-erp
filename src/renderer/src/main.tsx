@@ -3,7 +3,7 @@ import './assets/main.css'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { HashRouter, useRoutes } from 'react-router-dom'
-import { routes } from './routes'   // <-- use seu routes.tsx
+import { routes } from './app/routing/routes'   // <-- updated path
 
 function AppRoutes() {
   return useRoutes(routes);

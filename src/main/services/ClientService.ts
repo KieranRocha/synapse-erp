@@ -1,5 +1,5 @@
 import { ClientModel, Client } from '../models/Client'
-import { clienteSchema } from '../../renderer/src/pages/Clientes/schemas/clienteSchema'
+import { clienteSchema } from '../../renderer/src/modules/clientes/schemas/clienteSchema'
 import { z } from 'zod'
 
 export class ClientService {

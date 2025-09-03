@@ -1,6 +1,6 @@
-export { Section } from './Section';
-export { Field } from './Field';
-export { Input } from './Input';
-export { Select } from './Select';
-export { Textarea } from './Textarea';
-export { Hint, Divider } from './Hint';
+// Shared Form Components
+// Higher-level form constructs and patterns
+
+// For now, re-export basic UI components
+// Later this can contain form-specific compositions
+export * from '../ui'
