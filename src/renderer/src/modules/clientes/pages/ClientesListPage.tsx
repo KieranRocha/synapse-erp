@@ -134,9 +134,13 @@ export default function ClientesPage() {
       setLoading(true);
       setError(null);
       
+      // Check if API is available
+      if (!window.api || !window.api.clients) {
+        throw new Error('API não disponível. Verifique se o preload script foi carregado corretamente.');
+      }
+      
       const clients = await window.api.clients.getAll();
       setDatabaseClients(clients);
-      console.log('Clientes carregados do backend:', clients);
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar clientes';
@@ -149,7 +153,12 @@ export default function ClientesPage() {
 
   // Load clients on component mount
   useEffect(() => {
-    loadClients();
+    // Add a small delay to ensure API is fully loaded
+    const timeoutId = setTimeout(() => {
+      loadClients();
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
   }, []);
 
   // Convert database clients to display clients

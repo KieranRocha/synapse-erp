@@ -74,6 +74,11 @@ export default function OrcamentosPage() {
         }
             ; (async () => {
                 try {
+                    // Check if API is available
+                    if (!window.api || !window.api.budgets) {
+                        throw new Error('API não disponível. Verifique se o preload script foi carregado corretamente.');
+                    }
+                    
                     const list = await window.api.budgets.getAll()
                     setRows(list.map(toUi))
                 } catch (e) {

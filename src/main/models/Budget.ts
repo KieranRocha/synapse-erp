@@ -337,7 +337,7 @@ export class BudgetModel {
     financial?: Partial<BudgetFinancial> | null
   }): Promise<Budget | null> {
     return await prisma.$transaction(async (tx) => {
-      const updated = await tx.budget.update({
+      await tx.budget.update({
         where: { id },
         data: {
           clientId: data.clientId ?? undefined,
@@ -394,7 +394,7 @@ export class BudgetModel {
               ncm: f.ncm === undefined ? undefined : f.ncm,
               cest: f.cest === undefined ? undefined : f.cest,
               nbs: f.nbs === undefined ? undefined : f.nbs,
-              precoVenda: f.precoVenda === undefined ? undefined : d(num(f.precoVenda) ?? null),
+              precoVenda: f.precoVenda === undefined ? undefined : (num(f.precoVenda) != null ? d(num(f.precoVenda)!) : undefined),
               descontoPct: f.descontoPct === undefined ? undefined : d(num(f.descontoPct) ?? 0),
               descontoValor: f.descontoValor === undefined ? undefined : d(num(f.descontoValor) ?? 0),
               frete: f.frete === undefined ? undefined : d(num(f.frete) ?? 0),

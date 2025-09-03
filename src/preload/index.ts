@@ -1,6 +1,8 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
+console.log('🔄 Preload script loading...')
+
 // Custom APIs for renderer
 const api = {
   clients: {
@@ -24,16 +26,28 @@ const api = {
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
 // just add to the DOM global.
-if (process.contextIsolated) {
-  try {
+try {
+  if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('api', api)
-  } catch (error) {
-    console.error(error)
+    console.log('✅ API exposed to main world successfully via contextBridge')
+  } else {
+    // @ts-ignore (define in dts)
+    window.electron = electronAPI
+    // @ts-ignore (define in dts)
+    window.api = api
+    console.log('✅ API attached to window object successfully (no context isolation)')
   }
-} else {
-  // @ts-ignore (define in dts)
-  window.electron = electronAPI
-  // @ts-ignore (define in dts)
-  window.api = api
+} catch (error) {
+  console.error('❌ Error setting up API:', error)
+  // Fallback: try to set on window directly
+  try {
+    // @ts-ignore
+    window.electron = electronAPI
+    // @ts-ignore 
+    window.api = api
+    console.log('✅ API attached as fallback')
+  } catch (fallbackError) {
+    console.error('❌ Fallback also failed:', fallbackError)
+  }
 }
