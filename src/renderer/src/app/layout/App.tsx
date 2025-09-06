@@ -5,6 +5,7 @@ import { Header, Sidebar } from "../../shared/components/layout";
 import { useUIStore } from "../../shared/stores/uiStore";
 import { Toaster } from "sonner";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { configureToast } from "@renderer/shared/hooks/useToast";
 
 const TITLES: Record<string, { title: string; subtitle: string }> = {
   "/": { title: "Dashboard Executivo", subtitle: "Visão geral dos indicadores operacionais" },
@@ -20,11 +21,14 @@ const TITLES: Record<string, { title: string; subtitle: string }> = {
 };
 
 export default function App() {
-  const { isDark, setIsDark, sidebarCollapsed, toggleSidebar } = useUIStore();
+  const { isDark, sidebarCollapsed, toggleSidebar } = useUIStore();
   const [searchTerm, setSearchTerm] = useState("");
   const { pathname } = useLocation();
   const meta = TITLES[pathname] || TITLES["/"];
-
+  configureToast({
+    duration: 5000,
+    position: 'top-right',
+  })
   return (
     <>
       {/* Use h-screen e faça a coluna da direita rolar */}
@@ -32,7 +36,7 @@ export default function App() {
         {/* Sidebar fixa/estática (sticky e altura total) */}
         <div className="sticky top-0 h-screen">
           <Sidebar
-            isDark={isDark}
+
             projetos={[]}
             orcamentos={[]}
             collapsed={sidebarCollapsed}         // 👈 novo
@@ -54,8 +58,7 @@ export default function App() {
             <Header
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
-              isDark={isDark}
-              setIsDark={setIsDark}
+
               title={meta.title}
               subtitle={meta.subtitle}
               currentPage={pathname}
@@ -70,11 +73,9 @@ export default function App() {
       </div>
 
       <Toaster
-        theme={isDark ? "dark" : "light"}
-        position="top-right"
-        richColors
-        closeButton
-        swipeDirections={['left', 'right']}
+
+
+
       />
     </>
   );

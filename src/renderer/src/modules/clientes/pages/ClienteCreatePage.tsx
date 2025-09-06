@@ -3,7 +3,7 @@ import { Save, CheckCircle2 } from "lucide-react";
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
-import { useToastStore } from '../../../shared/stores/toastStore';
+import { useToastStore } from '../../../shared/hooks/useToast';
 import { clienteSchema, type ClienteInput, type ClienteFormData } from '../schemas/clienteSchema';
 import { 
   IdentificacaoSection, 
@@ -45,7 +45,7 @@ const defaultValues: Partial<ClienteFormData> = {
 
 function NovoClienteForm() {
   const navigate = useNavigate();
-  const pushToast = useToastStore((s: any) => s.push);
+  const pushToast = useToastStore();
   const [cnpjFilled, setCnpjFilled] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 

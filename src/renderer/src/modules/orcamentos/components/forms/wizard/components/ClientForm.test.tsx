@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { ClientForm } from './ClientForm';
 
@@ -31,7 +31,7 @@ describe('ClientForm', () => {
 
   it('should render client information when data is provided', () => {
     render(<ClientForm data={mockClientData} />);
-    
+
     expect(screen.getByDisplayValue('Test Company LTDA')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Rua Test, 123')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Centro')).toBeInTheDocument();
@@ -44,11 +44,11 @@ describe('ClientForm', () => {
 
   it('should render empty placeholders when no data is provided', () => {
     render(<ClientForm data={emptyClientData} />);
-    
+
     // Check if placeholders are shown for empty fields
     const inputs = screen.getAllByRole('textbox');
     expect(inputs).toHaveLength(8); // Should have 8 input fields
-    
+
     inputs.forEach(input => {
       expect(input).toHaveValue('');
     });
@@ -56,26 +56,26 @@ describe('ClientForm', () => {
 
   it('should render all field labels correctly', () => {
     render(<ClientForm data={mockClientData} />);
-    
+
     expect(screen.getByText('Nome')).toBeInTheDocument();
     expect(screen.getByText('Endereço')).toBeInTheDocument();
     expect(screen.getByText('Bairro')).toBeInTheDocument();
     expect(screen.getByText('Cidade')).toBeInTheDocument();
     expect(screen.getByText('UF')).toBeInTheDocument();
     expect(screen.getByText('CEP')).toBeInTheDocument();
-    expect(screen.getByText('Atividade')).toBeInTheDocument();
-    expect(screen.getByText('Data Abertura')).toBeInTheDocument();
+    expect(screen.getByText('Atividade Principal (CNAE)')).toBeInTheDocument();
+    expect(screen.getByText('Início de Atividade')).toBeInTheDocument();
   });
 
   it('should render help text', () => {
     render(<ClientForm data={mockClientData} />);
-    
+
     expect(screen.getByText('Dados do Cliente (preenchidos automaticamente)')).toBeInTheDocument();
   });
 
   it('should have readonly inputs', () => {
     render(<ClientForm data={mockClientData} />);
-    
+
     const inputs = screen.getAllByRole('textbox');
     inputs.forEach(input => {
       expect(input).toHaveAttribute('readonly');
@@ -85,7 +85,7 @@ describe('ClientForm', () => {
   it('should apply custom input className when provided', () => {
     const customClass = 'custom-input-class';
     render(<ClientForm data={mockClientData} inputClassName={customClass} />);
-    
+
     const inputs = screen.getAllByRole('textbox');
     inputs.forEach(input => {
       expect(input).toHaveClass(customClass);
@@ -105,7 +105,7 @@ describe('ClientForm', () => {
     };
 
     render(<ClientForm data={partialData} />);
-    
+
     expect(screen.getByDisplayValue('Only Name Company')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Only City')).toBeInTheDocument();
   });

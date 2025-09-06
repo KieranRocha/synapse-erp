@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Save } from "lucide-react";
-import { useToastStore } from "../../../../shared/stores/toastStore";
+import { useToastStore } from "../../../../shared/hooks/useToast";
 import { computeTotals } from "../../utils/utils";
 import type { Item, Fin, Meta } from "../../utils/types";
 import Stepper from "./wizard/Stepper";
@@ -14,7 +14,7 @@ import StepPrecoEMargem from "./wizard/steps/StepPrecoEMargem";
 import { useNavigate } from "react-router-dom";
 
 export default function NovoOrcamentoWizard() {
-  const pushToast = useToastStore((s: any) => s.push);
+  const pushToast = useToastStore();
   const navigate = useNavigate();
 
   const [step, setStep] = useState(0);

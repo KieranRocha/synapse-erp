@@ -1,8 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useUIStore } from "../../../shared/stores/uiStore";
-import { useToastStore } from "../../../shared/stores/toastStore";
-import ToastViewport from "../../../shared/components/feedback/ToastViewport";
+import { useToastStore } from "../../../shared/hooks/useToast";
 import { MOCK_DETALHE } from "../utils/mockOrcamentoDetalhe";
 import {
   ArrowLeft,
@@ -666,8 +665,6 @@ export default function OrcamentoEdicaoPagePlus() {
           </div>
         </div>
       </div>
-
-      <ToastViewport />
     </div>
   );
 }

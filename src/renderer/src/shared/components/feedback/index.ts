@@ -1,2 +1,2 @@
 // Shared Feedback Components
-export { ToastViewport } from './ToastViewport'
+// ToastProvider removed - using Toaster directly in App.tsx

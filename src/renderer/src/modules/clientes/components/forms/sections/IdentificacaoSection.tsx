@@ -4,7 +4,7 @@ import { Building2, Search, Loader2 } from 'lucide-react';
 import { Section, Field, Input, Select, Hint, Divider } from '../../../../../shared/components/ui';
 import { ClienteFormData } from '../../../schemas/clienteSchema';
 import { CNPJResponse } from '../../../types/clienteTypes';
-import { useToastStore } from '../../../../../shared/stores/toastStore';
+import { useToastStore } from '../../../../../shared/hooks/useToast';
 
 interface IdentificacaoSectionProps {
   control: Control<ClienteFormData>;
@@ -16,7 +16,7 @@ interface IdentificacaoSectionProps {
 }
 
 export function IdentificacaoSection({ control, setValue, errors, register, cnpjFilled, setCnpjFilled }: IdentificacaoSectionProps) {
-  const pushToast = useToastStore((s: any) => s.push);
+  const pushToast = useToastStore();
   const [isLoadingCNPJ, setIsLoadingCNPJ] = useState(false);
   
   const tipoPessoa = useWatch({ control, name: 'tipoPessoa' });

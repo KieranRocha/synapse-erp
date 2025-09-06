@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useToastStore } from "../../../shared/stores/toastStore"
+import { useToastStore } from "../../../shared/hooks/useToast"
 import { 
   ArrowLeft, 
   Loader2, 
@@ -25,36 +25,6 @@ import {
   GeralTab,
   ItensTab
 } from '../../../modules/projetos/components/sections'
-
-function ToastViewport() {
-  const { toasts, remove } = useToastStore()
-  
-  useEffect(() => {
-    const timers = toasts.map((t) => setTimeout(() => remove(t.id), 3000))
-    return () => timers.forEach(clearTimeout)
-  }, [toasts, remove])
-
-  return (
-    <div className="fixed bottom-4 right-4 space-y-2 z-50">
-      {toasts.map((t) => (
-        <div
-          key={t.id}
-          className={`
-            flex items-center gap-2 rounded-xl border px-4 py-3 shadow-lg backdrop-blur
-            ${t.type === 'error' ? 'border-red-500/40 bg-red-50/90 text-red-700' :
-              t.type === 'warning' ? 'border-amber-500/40 bg-amber-50/90 text-amber-700' :
-              t.type === 'info' ? 'border-blue-500/40 bg-blue-50/90 text-blue-700' :
-              'border-green-500/40 bg-green-50/90 text-green-700'
-            }
-          `}
-        >
-          <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-          <span className="text-sm font-medium">{t.message}</span>
-        </div>
-      ))}
-    </div>
-  )
-}
 
 // Mock data para desenvolvimento - será substituído pela API real
 const MOCK_PROJETO: ProjetoDetalhado = {
@@ -457,8 +427,6 @@ export default function OrcamentoDetalhePage() {
         </div>
       </div>
 
-      {/* Toast viewport */}
-      <ToastViewport />
     </div>
   )
 }

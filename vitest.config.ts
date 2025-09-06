@@ -1,6 +1,6 @@
-import { defineConfig } from 'vitest/config';
-import react from '@vitejs/plugin-react';
-import { resolve } from 'path';
+import { defineConfig } from 'vitest/config'
+import react from '@vitejs/plugin-react'
+import { resolve } from 'path'
 
 export default defineConfig({
   plugins: [react()],
@@ -12,15 +12,15 @@ export default defineConfig({
     pool: 'threads',
     poolOptions: {
       threads: {
-        singleThread: true,
-      },
-    },
+        singleThread: true
+      }
+    }
   },
   resolve: {
     alias: {
       '@': resolve(__dirname, './src'),
       '@shared': resolve(__dirname, './src/renderer/src/shared'),
-      '@modules': resolve(__dirname, './src/renderer/src/modules'),
-    },
-  },
-});
+      '@modules': resolve(__dirname, './src/renderer/src/modules')
+    }
+  }
+})

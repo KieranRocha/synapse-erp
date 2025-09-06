@@ -1,15 +1,26 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import StepDados from './StepDados';
 import type { Meta } from '../../../../utils/types';
 
-// Mock the toast store
-const mockPush = vi.fn();
-vi.mock('../../../../../../shared/stores/toastStore', () => ({
-  useToastStore: () => mockPush,
-}));
+// Mock the toast hooks
+const mockToast = {
+  success: vi.fn(),
+  error: vi.fn(),
+  warning: vi.fn(),
+  info: vi.fn(),
+  show: vi.fn()
+};
+
+vi.mock('../../../../../../shared/hooks', async () => {
+  const actual = await vi.importActual('../../../../../../shared/hooks');
+  return {
+    ...actual,
+    useToast: () => mockToast,
+    useToastStore: () => mockToast.success,
+  };
+});
 
 // Mock navigate
 const mockNavigate = vi.fn();
@@ -23,12 +34,10 @@ vi.mock('react-router-dom', async () => {
 
 // Mock window API
 const mockSearch = vi.fn();
-global.window = {
-  ...global.window,
-  api: {
-    clients: {
-      search: mockSearch,
-    },
+global.window.api = {
+  ...global.window.api,
+  clients: {
+    search: mockSearch,
   },
 };
 
@@ -73,12 +82,14 @@ describe('StepDados', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    Object.values(mockToast).forEach(fn => fn.mockClear());
     vi.useFakeTimers();
     mockSearch.mockResolvedValue([]);
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.useRealTimers();
   });
 
   it('should render all form fields', () => {
@@ -111,9 +122,7 @@ describe('StepDados', () => {
     expect(screen.getByText('Descrição / Escopo do Orçamento')).toBeInTheDocument();
   });
 
-  it('should update meta when numero input changes', async () => {
-    const user = userEvent.setup();
-    
+  it('should update meta when numero input changes', () => {
     render(
       <Wrapper>
         <StepDados meta={defaultMeta} setMeta={mockSetMeta} />
@@ -121,7 +130,7 @@ describe('StepDados', () => {
     );
 
     const numeroInput = screen.getByPlaceholderText('Ex: ORC-001');
-    await user.type(numeroInput, 'ORC-002');
+    fireEvent.change(numeroInput, { target: { value: 'ORC-002' } });
 
     expect(mockSetMeta).toHaveBeenCalledWith({
       ...defaultMeta,
@@ -129,9 +138,7 @@ describe('StepDados', () => {
     });
   });
 
-  it('should update meta when nome input changes', async () => {
-    const user = userEvent.setup();
-    
+  it('should update meta when nome input changes', () => {
     render(
       <Wrapper>
         <StepDados meta={defaultMeta} setMeta={mockSetMeta} />
@@ -139,7 +146,7 @@ describe('StepDados', () => {
     );
 
     const nomeInput = screen.getByPlaceholderText('Ex: Linha de Pintura - Setor A');
-    await user.type(nomeInput, 'Novo Projeto');
+    fireEvent.change(nomeInput, { target: { value: 'Novo Projeto' } });
 
     expect(mockSetMeta).toHaveBeenCalledWith({
       ...defaultMeta,
@@ -148,9 +155,8 @@ describe('StepDados', () => {
   });
 
   it('should perform client search with debounce', async () => {
-    const user = userEvent.setup();
     mockSearch.mockResolvedValue([mockClient]);
-    
+
     render(
       <Wrapper>
         <StepDados meta={defaultMeta} setMeta={mockSetMeta} />
@@ -158,10 +164,10 @@ describe('StepDados', () => {
     );
 
     const searchInput = screen.getByPlaceholderText('Digite o nome ou CNPJ do cliente...');
-    await user.type(searchInput, 'test search');
+    fireEvent.change(searchInput, { target: { value: 'test search' } });
 
     // Fast-forward debounce timer
-    vi.advanceTimersByTime(300);
+    vi.advanceTimersByTime(100);
 
     await waitFor(() => {
       expect(mockSearch).toHaveBeenCalledWith('test search');
@@ -169,12 +175,11 @@ describe('StepDados', () => {
   });
 
   it('should show loading spinner during search', async () => {
-    const user = userEvent.setup();
     let resolveSearch: (value: any) => void;
     mockSearch.mockImplementation(() => new Promise(resolve => {
       resolveSearch = resolve;
     }));
-    
+
     render(
       <Wrapper>
         <StepDados meta={defaultMeta} setMeta={mockSetMeta} />
@@ -182,7 +187,7 @@ describe('StepDados', () => {
     );
 
     const searchInput = screen.getByPlaceholderText('Digite o nome ou CNPJ do cliente...');
-    await user.type(searchInput, 'test');
+    fireEvent.change(searchInput, { target: { value: 'test' } });
 
     vi.advanceTimersByTime(300);
 
@@ -196,9 +201,8 @@ describe('StepDados', () => {
   });
 
   it('should display search results in dropdown', async () => {
-    const user = userEvent.setup();
     mockSearch.mockResolvedValue([mockClient]);
-    
+
     render(
       <Wrapper>
         <StepDados meta={defaultMeta} setMeta={mockSetMeta} />
@@ -206,7 +210,7 @@ describe('StepDados', () => {
     );
 
     const searchInput = screen.getByPlaceholderText('Digite o nome ou CNPJ do cliente...');
-    await user.type(searchInput, 'test');
+    fireEvent.change(searchInput, { target: { value: 'test' } });
 
     vi.advanceTimersByTime(300);
 
@@ -219,9 +223,8 @@ describe('StepDados', () => {
   });
 
   it('should select client and update meta', async () => {
-    const user = userEvent.setup();
     mockSearch.mockResolvedValue([mockClient]);
-    
+
     render(
       <Wrapper>
         <StepDados meta={defaultMeta} setMeta={mockSetMeta} />
@@ -229,7 +232,7 @@ describe('StepDados', () => {
     );
 
     const searchInput = screen.getByPlaceholderText('Digite o nome ou CNPJ do cliente...');
-    await user.type(searchInput, 'test');
+    fireEvent.change(searchInput, { target: { value: 'test' } });
 
     vi.advanceTimersByTime(300);
 
@@ -238,7 +241,7 @@ describe('StepDados', () => {
     });
 
     const clientButton = screen.getByText('Test Company');
-    await user.click(clientButton);
+    fireEvent.click(clientButton);
 
     expect(mockSetMeta).toHaveBeenCalledWith({
       ...defaultMeta,
@@ -254,13 +257,12 @@ describe('StepDados', () => {
       clienteAbertura: '01/01/2024',
     });
 
-    expect(mockPush).toHaveBeenCalledWith('Cliente "Test Company" selecionado!');
+    expect(mockToast.success).toHaveBeenCalledWith('Cliente "Test Company" selecionado!');
   });
 
   it('should show "no results" message when no clients found', async () => {
-    const user = userEvent.setup();
     mockSearch.mockResolvedValue([]);
-    
+
     render(
       <Wrapper>
         <StepDados meta={defaultMeta} setMeta={mockSetMeta} />
@@ -268,7 +270,7 @@ describe('StepDados', () => {
     );
 
     const searchInput = screen.getByPlaceholderText('Digite o nome ou CNPJ do cliente...');
-    await user.type(searchInput, 'nonexistent');
+    fireEvent.change(searchInput, { target: { value: 'nonexistent' } });
 
     vi.advanceTimersByTime(300);
 
@@ -278,9 +280,7 @@ describe('StepDados', () => {
     });
   });
 
-  it('should navigate to new client page when clicking "Novo" button', async () => {
-    const user = userEvent.setup();
-    
+  it('should navigate to new client page when clicking "Novo" button', () => {
     render(
       <Wrapper>
         <StepDados meta={defaultMeta} setMeta={mockSetMeta} />
@@ -288,15 +288,14 @@ describe('StepDados', () => {
     );
 
     const novoButton = screen.getByRole('button', { name: /novo/i });
-    await user.click(novoButton);
+    fireEvent.click(novoButton);
 
     expect(mockNavigate).toHaveBeenCalledWith('/clientes/novo');
   });
 
   it('should navigate to new client page when clicking "Cadastrar novo cliente" link', async () => {
-    const user = userEvent.setup();
     mockSearch.mockResolvedValue([]);
-    
+
     render(
       <Wrapper>
         <StepDados meta={defaultMeta} setMeta={mockSetMeta} />
@@ -304,7 +303,7 @@ describe('StepDados', () => {
     );
 
     const searchInput = screen.getByPlaceholderText('Digite o nome ou CNPJ do cliente...');
-    await user.type(searchInput, 'nonexistent');
+    fireEvent.change(searchInput, { target: { value: 'nonexistent' } });
 
     vi.advanceTimersByTime(300);
 
@@ -313,15 +312,14 @@ describe('StepDados', () => {
     });
 
     const cadastrarLink = screen.getByText('Cadastrar novo cliente');
-    await user.click(cadastrarLink);
+    fireEvent.click(cadastrarLink);
 
     expect(mockNavigate).toHaveBeenCalledWith('/clientes/novo');
   });
 
   it('should show check icon when client is selected', async () => {
-    const user = userEvent.setup();
     mockSearch.mockResolvedValue([mockClient]);
-    
+
     render(
       <Wrapper>
         <StepDados meta={defaultMeta} setMeta={mockSetMeta} />
@@ -329,7 +327,7 @@ describe('StepDados', () => {
     );
 
     const searchInput = screen.getByPlaceholderText('Digite o nome ou CNPJ do cliente...');
-    await user.type(searchInput, 'test');
+    fireEvent.change(searchInput, { target: { value: 'test' } });
 
     vi.advanceTimersByTime(300);
 
@@ -338,14 +336,12 @@ describe('StepDados', () => {
     });
 
     const clientButton = screen.getByText('Test Company');
-    await user.click(clientButton);
+    fireEvent.click(clientButton);
 
     expect(document.querySelector('.text-emerald-600')).toBeInTheDocument();
   });
 
-  it('should update responsavel in meta', async () => {
-    const user = userEvent.setup();
-    
+  it('should update responsavel in meta', () => {
     render(
       <Wrapper>
         <StepDados meta={defaultMeta} setMeta={mockSetMeta} />
@@ -353,7 +349,7 @@ describe('StepDados', () => {
     );
 
     const responsavelInput = screen.getByPlaceholderText('Nome do responsável');
-    await user.type(responsavelInput, 'João Silva');
+    fireEvent.change(responsavelInput, { target: { value: 'João Silva' } });
 
     expect(mockSetMeta).toHaveBeenCalledWith({
       ...defaultMeta,
@@ -361,9 +357,7 @@ describe('StepDados', () => {
     });
   });
 
-  it('should update date fields in meta', async () => {
-    const user = userEvent.setup();
-    
+  it('should update date fields in meta', () => {
     render(
       <Wrapper>
         <StepDados meta={defaultMeta} setMeta={mockSetMeta} />
@@ -371,14 +365,14 @@ describe('StepDados', () => {
     );
 
     const dateInputs = screen.getAllByDisplayValue('');
-    const dataInicioInput = dateInputs.find(input => 
-      input.getAttribute('type') === 'date' && 
+    const dataInicioInput = dateInputs.find(input =>
+      input.getAttribute('type') === 'date' &&
       input.closest('.flex-col')?.textContent?.includes('Data de Início')
     );
-    
+
     if (dataInicioInput) {
-      await user.type(dataInicioInput, '2024-01-01');
-      
+      fireEvent.change(dataInicioInput, { target: { value: '2024-01-01' } });
+
       expect(mockSetMeta).toHaveBeenCalledWith({
         ...defaultMeta,
         dataInicio: '2024-01-01',
@@ -386,9 +380,7 @@ describe('StepDados', () => {
     }
   });
 
-  it('should update description in meta', async () => {
-    const user = userEvent.setup();
-    
+  it('should update description in meta', () => {
     render(
       <Wrapper>
         <StepDados meta={defaultMeta} setMeta={mockSetMeta} />
@@ -396,7 +388,7 @@ describe('StepDados', () => {
     );
 
     const descricaoInput = screen.getByPlaceholderText('Detalhes sobre o projeto, ambiente, requisitos técnicos, etc.');
-    await user.type(descricaoInput, 'Descrição do projeto');
+    fireEvent.change(descricaoInput, { target: { value: 'Descrição do projeto' } });
 
     expect(mockSetMeta).toHaveBeenCalledWith({
       ...defaultMeta,
@@ -405,10 +397,9 @@ describe('StepDados', () => {
   });
 
   it('should handle search errors gracefully', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const user = userEvent.setup();
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
     mockSearch.mockRejectedValue(new Error('API Error'));
-    
+
     render(
       <Wrapper>
         <StepDados meta={defaultMeta} setMeta={mockSetMeta} />
@@ -416,7 +407,7 @@ describe('StepDados', () => {
     );
 
     const searchInput = screen.getByPlaceholderText('Digite o nome ou CNPJ do cliente...');
-    await user.type(searchInput, 'error test');
+    fireEvent.change(searchInput, { target: { value: 'error test' } });
 
     vi.advanceTimersByTime(300);
 
@@ -428,9 +419,8 @@ describe('StepDados', () => {
   });
 
   it('should format CNPJ correctly', async () => {
-    const user = userEvent.setup();
     mockSearch.mockResolvedValue([mockClient]);
-    
+
     render(
       <Wrapper>
         <StepDados meta={defaultMeta} setMeta={mockSetMeta} />
@@ -438,7 +428,7 @@ describe('StepDados', () => {
     );
 
     const searchInput = screen.getByPlaceholderText('Digite o nome ou CNPJ do cliente...');
-    await user.type(searchInput, 'test');
+    fireEvent.change(searchInput, { target: { value: 'test' } });
 
     vi.advanceTimersByTime(300);
 
@@ -448,9 +438,8 @@ describe('StepDados', () => {
   });
 
   it('should close dropdown when clicking outside', async () => {
-    const user = userEvent.setup();
     mockSearch.mockResolvedValue([mockClient]);
-    
+
     render(
       <Wrapper>
         <StepDados meta={defaultMeta} setMeta={mockSetMeta} />
@@ -458,7 +447,7 @@ describe('StepDados', () => {
     );
 
     const searchInput = screen.getByPlaceholderText('Digite o nome ou CNPJ do cliente...');
-    await user.type(searchInput, 'test');
+    fireEvent.change(searchInput, { target: { value: 'test' } });
 
     vi.advanceTimersByTime(300);
 
@@ -467,7 +456,7 @@ describe('StepDados', () => {
     });
 
     // Click outside
-    await user.click(document.body);
+    fireEvent.click(document.body);
 
     await waitFor(() => {
       expect(screen.queryByText('Test Company')).not.toBeInTheDocument();

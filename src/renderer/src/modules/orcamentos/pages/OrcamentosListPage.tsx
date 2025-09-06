@@ -7,7 +7,7 @@ import { filterBudgets, sortBudgets } from "../../../shared/utils";
 import { KpiCards } from "../components/cards/KpiCards";
 import { FiltersBar } from "../components/ui/FiltersBar";
 import { BudgetsTable } from "../components/tables/BudgetsTable";
-import { useToastStore } from "../../../shared/stores";
+import { useToastStore } from "../../../shared/hooks/useToast";
 
 // OBS: Esta página NÃO rende Sidebar/Header — use o seu layout existente.
 export default function OrcamentosPage() {

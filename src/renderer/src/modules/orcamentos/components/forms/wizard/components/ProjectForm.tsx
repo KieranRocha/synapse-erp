@@ -34,6 +34,7 @@ export function ProjectForm({ data, onChange, inputClassName = "" }: ProjectForm
         <div className="flex-1 flex flex-col">
           <label className="text-xs opacity-70 mb-1">Nome do Orçamento *</label>
           <input
+            aria-label="Nome do Orçamento"
             className={inputClass}
             placeholder="Ex: Linha de Pintura - Setor A"
             value={data.nome}
