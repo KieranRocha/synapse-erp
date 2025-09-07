@@ -4,6 +4,7 @@ import { Decimal } from '@prisma/client/runtime/library'
 
 export interface Client {
   id: number
+  tenantId: string
   tipo_pessoa: string | null
   razao_social: string
   nome_fantasia: string | null
@@ -42,23 +43,30 @@ function serializeClient(prismaClient: PrismaClient): Client {
 }
 
 export class ClientModel {
-  static async findAll(): Promise<Client[]> {
+  static async findAll(tenantId: string): Promise<Client[]> {
     const clients = await prisma.client.findMany({
+      where: { tenantId },
       orderBy: { created_at: 'desc' }
     })
     return clients.map(serializeClient)
   }
 
-  static async findById(id: number): Promise<Client | null> {
-    const client = await prisma.client.findUnique({
-      where: { id }
+  static async findById(tenantId: string, id: number): Promise<Client | null> {
+    const client = await prisma.client.findFirst({
+      where: { 
+        id,
+        tenantId 
+      }
     })
     return client ? serializeClient(client) : null
   }
 
-  static async findByCpfCnpj(cpfCnpj: string): Promise<Client | null> {
+  static async findByCpfCnpj(tenantId: string, cpfCnpj: string): Promise<Client | null> {
     const client = await prisma.client.findFirst({
-      where: { cpf_cnpj: cpfCnpj }
+      where: { 
+        tenantId,
+        cpf_cnpj: cpfCnpj 
+      }
     })
     return client ? serializeClient(client) : null
   }
@@ -74,7 +82,7 @@ export class ClientModel {
     return serializeClient(newClient)
   }
 
-  static async update(id: number, client: Partial<Omit<Client, 'id' | 'created_at' | 'updated_at'>>): Promise<Client | null> {
+  static async update(tenantId: string, id: number, client: Partial<Omit<Client, 'id' | 'tenantId' | 'created_at' | 'updated_at'>>): Promise<Client | null> {
     try {
       const data = {
         ...client,
@@ -92,7 +100,7 @@ export class ClientModel {
     }
   }
 
-  static async delete(id: number): Promise<boolean> {
+  static async delete(tenantId: string, id: number): Promise<boolean> {
     try {
       await prisma.client.delete({
         where: { id }
@@ -103,9 +111,10 @@ export class ClientModel {
     }
   }
 
-  static async search(term: string): Promise<Client[]> {
+  static async search(tenantId: string, term: string): Promise<Client[]> {
     const clients = await prisma.client.findMany({
       where: {
+        tenantId,
         OR: [
           { razao_social: { contains: term, mode: 'insensitive' } },
           { nome_fantasia: { contains: term, mode: 'insensitive' } },

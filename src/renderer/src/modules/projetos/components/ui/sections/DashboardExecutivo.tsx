@@ -41,22 +41,33 @@ export function DashboardExecutivo({ projeto }: DashboardExecutivoProps) {
   }
 
   const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
+    if (!active || !payload || !Array.isArray(payload) || payload.length === 0) {
+      return null
+    }
+    
+    try {
+      const firstPayload = payload[0]
+      if (!firstPayload || firstPayload.value === undefined) {
+        return null
+      }
+      
       return (
         <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
-          <p className="font-medium text-fg">{label}</p>
+          <p className="font-medium text-fg">{label || 'Dados'}</p>
           <p className="text-sm text-emerald-600">
-            {formatCurrency(payload[0].value)}
+            {formatCurrency(Number(firstPayload.value) || 0)}
           </p>
-          {payload[0].payload.percentage && (
+          {firstPayload.payload && firstPayload.payload.percentage && (
             <p className="text-xs opacity-70">
-              {formatPercent(payload[0].payload.percentage)}
+              {formatPercent(Number(firstPayload.payload.percentage) || 0)}
             </p>
           )}
         </div>
       )
+    } catch (error) {
+      console.warn('Error in CustomTooltip:', error)
+      return null
     }
-    return null
   }
 
   return (
@@ -153,22 +164,35 @@ export function DashboardExecutivo({ projeto }: DashboardExecutivoProps) {
             <div className="flex flex-col lg:flex-row items-center gap-4">
               <div className="w-full lg:w-1/2 h-48">
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={categoriesData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={30}
-                      outerRadius={80}
-                      paddingAngle={2}
-                      dataKey="value"
-                    >
-                      {categoriesData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<CustomTooltip />} />
-                  </PieChart>
+                  {(() => {
+                    try {
+                      return (
+                        <PieChart>
+                          <Pie
+                            data={categoriesData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={30}
+                            outerRadius={80}
+                            paddingAngle={2}
+                            dataKey="value"
+                          >
+                            {categoriesData.filter(entry => entry && entry.color).map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip content={<CustomTooltip />} />
+                        </PieChart>
+                      )
+                    } catch (error) {
+                      console.error('Error rendering PieChart:', error)
+                      return (
+                        <div className="flex items-center justify-center h-full text-muted-foreground">
+                          <p className="text-sm">Erro ao carregar gráfico</p>
+                        </div>
+                      )
+                    }
+                  })()}
                 </ResponsiveContainer>
               </div>
 
@@ -208,29 +232,42 @@ export function DashboardExecutivo({ projeto }: DashboardExecutivoProps) {
           {topItems.length > 0 ? (
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={topItems}
-                  margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                  <XAxis 
-                    dataKey="name" 
-                    tick={{ fontSize: 11 }}
-                    angle={-45}
-                    textAnchor="end"
-                    height={60}
-                  />
-                  <YAxis 
-                    tick={{ fontSize: 11 }}
-                    tickFormatter={(value) => formatCurrency(value).replace('R$', '').trim()}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar 
-                    dataKey="value" 
-                    radius={[4, 4, 0, 0]}
-                    fill="#22c55e"
-                  />
-                </BarChart>
+                {(() => {
+                  try {
+                    return (
+                      <BarChart
+                        data={topItems}
+                        margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                        <XAxis 
+                          dataKey="name" 
+                          tick={{ fontSize: 11 }}
+                          angle={-45}
+                          textAnchor="end"
+                          height={60}
+                        />
+                        <YAxis 
+                          tick={{ fontSize: 11 }}
+                          tickFormatter={(value) => formatCurrency(Number(value) || 0).replace('R$', '').trim()}
+                        />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Bar 
+                          dataKey="value" 
+                          radius={[4, 4, 0, 0]}
+                          fill="#22c55e"
+                        />
+                      </BarChart>
+                    )
+                  } catch (error) {
+                    console.error('Error rendering BarChart:', error)
+                    return (
+                      <div className="flex items-center justify-center h-full text-muted-foreground">
+                        <p className="text-sm">Erro ao carregar gráfico</p>
+                      </div>
+                    )
+                  }
+                })()}
               </ResponsiveContainer>
             </div>
           ) : (

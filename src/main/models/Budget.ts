@@ -179,25 +179,30 @@ function serializeBudget(b: PrismaBudget & { items: PrismaBudgetItem[]; financia
 }
 
 export class BudgetModel {
-  static async findAll(): Promise<Budget[]> {
+  static async findAll(tenantId: string): Promise<Budget[]> {
     const rows = await prisma.budget.findMany({
+      where: { tenantId },
       include: { items: true, financial: true },
       orderBy: { created_at: 'desc' }
     })
     return rows.map(serializeBudget)
   }
 
-  static async findById(id: number): Promise<Budget | null> {
-    const row = await prisma.budget.findUnique({
-      where: { id },
+  static async findById(tenantId: string, id: number): Promise<Budget | null> {
+    const row = await prisma.budget.findFirst({
+      where: { 
+        id: id,
+        tenantId: tenantId // Ensure budget belongs to the correct tenant
+      },
       include: { items: true, financial: true, client: true }
     })
     return row ? serializeBudget(row) : null
   }
 
-  static async search(term: string): Promise<Budget[]> {
+  static async search(tenantId: string, term: string): Promise<Budget[]> {
     const rows = await prisma.budget.findMany({
       where: {
+        tenantId, // Filter by tenant first
         OR: [
           { name: { contains: term, mode: 'insensitive' } },
           { description: { contains: term, mode: 'insensitive' } },
@@ -211,7 +216,7 @@ export class BudgetModel {
     return rows.map(serializeBudget)
   }
 
-  static async create(data: {
+  static async create(tenantId: string, data: {
     clientId?: number | null
     numero: string
     name: string
@@ -234,6 +239,7 @@ export class BudgetModel {
   }): Promise<Budget> {
     const created = await prisma.budget.create({
       data: {
+        tenantId,
         clientId: data.clientId ?? null,
         numero: data.numero,
         name: data.name,
@@ -315,7 +321,7 @@ export class BudgetModel {
     return serializeBudget(created)
   }
 
-  static async update(id: number, data: {
+  static async update(tenantId: string, id: number, data: {
     clientId?: number | null
     numero?: string
     name?: string
@@ -337,8 +343,8 @@ export class BudgetModel {
     financial?: Partial<BudgetFinancial> | null
   }): Promise<Budget | null> {
     return await prisma.$transaction(async (tx) => {
-      await tx.budget.update({
-        where: { id },
+      await tx.budget.updateMany({
+        where: { id: id, tenantId: tenantId },
         data: {
           clientId: data.clientId ?? undefined,
           numero: data.numero ?? undefined,
@@ -479,18 +485,18 @@ export class BudgetModel {
         }
       }
 
-      const full = await tx.budget.findUnique({
-        where: { id },
+      const full = await tx.budget.findFirst({
+        where: { id: id, tenantId: tenantId },
         include: { items: true, financial: true }
       })
       return full ? serializeBudget(full) : null
     })
   }
 
-  static async delete(id: number): Promise<boolean> {
+  static async delete(tenantId: string, id: number): Promise<boolean> {
     try {
-      await prisma.budget.delete({ where: { id } })
-      return true
+      const result = await prisma.budget.deleteMany({ where: { id: id, tenantId: tenantId } })
+      return result.count > 0
     } catch (e) {
       return false
     }

@@ -88,25 +88,25 @@ export const BudgetCreateSchema = z.object({
 export type BudgetCreateInput = z.infer<typeof BudgetCreateSchema>
 
 export class BudgetService {
-  static async getAllBudgets(): Promise<Budget[]> {
-    return await BudgetModel.findAll()
+  static async getAllBudgets(tenantId: string): Promise<Budget[]> {
+    return await BudgetModel.findAll(tenantId)
   }
 
-  static async getBudgetById(id: number): Promise<Budget | null> {
-    return await BudgetModel.findById(id)
+  static async getBudgetById(tenantId: string, id: number): Promise<Budget | null> {
+    return await BudgetModel.findById(tenantId, id)
   }
 
-  static async searchBudgets(term: string): Promise<Budget[]> {
-    if (!term.trim()) return await BudgetModel.findAll()
-    return await BudgetModel.search(term.trim())
+  static async searchBudgets(tenantId: string, term: string): Promise<Budget[]> {
+    if (!term.trim()) return await BudgetModel.findAll(tenantId)
+    return await BudgetModel.search(tenantId, term.trim())
   }
 
-  static async createBudget(payload: BudgetCreateInput): Promise<Budget> {
+  static async createBudget(tenantId: string, payload: BudgetCreateInput): Promise<Budget> {
     const data = BudgetCreateSchema.parse(payload)
     const startDate = data.meta.dataInicio ? new Date(data.meta.dataInicio) : undefined
     const deliveryDate = data.meta.previsaoEntrega ? new Date(data.meta.previsaoEntrega) : undefined
 
-    return await BudgetModel.create({
+    return await BudgetModel.create(tenantId, {
       clientId: data.meta.clienteId ?? undefined,
       numero: data.meta.numero,
       name: data.meta.nome,
@@ -139,7 +139,7 @@ export class BudgetService {
     })
   }
 
-  static async updateBudget(id: number, payload: Partial<BudgetCreateInput>): Promise<Budget | null> {
+  static async updateBudget(tenantId: string, id: number, payload: Partial<BudgetCreateInput>): Promise<Budget | null> {
     // Allow partial updates: validate each part if provided
     const items = payload.items ? z.array(ItemSchema).parse(payload.items) : undefined
     const fin = payload.fin ? FinSchema.partial().parse(payload.fin) : undefined
@@ -149,7 +149,7 @@ export class BudgetService {
     const startDate = meta?.dataInicio ? new Date(meta.dataInicio) : undefined
     const deliveryDate = meta?.previsaoEntrega ? new Date(meta.previsaoEntrega) : undefined
 
-    return await BudgetModel.update(id, {
+    return await BudgetModel.update(tenantId, id, {
       clientId: meta?.clienteId,
       numero: meta?.numero,
       name: meta?.nome,
@@ -178,7 +178,7 @@ export class BudgetService {
     })
   }
 
-  static async deleteBudget(id: number): Promise<boolean> {
-    return await BudgetModel.delete(id)
+  static async deleteBudget(tenantId: string, id: number): Promise<boolean> {
+    return await BudgetModel.delete(tenantId, id)
   }
 }

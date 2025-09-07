@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useToastStore } from "../../../shared/hooks/useToast"
-import { 
-  ArrowLeft, 
-  Loader2, 
+import {
+  ArrowLeft,
+  Loader2,
   AlertCircle,
   FileDown,
   Mail,
@@ -14,14 +14,14 @@ import {
   BarChart3,
   History
 } from 'lucide-react'
-import type { 
-  ProjetoDetalhado, 
-  ProjetoViewState, 
-  TabType 
+import type {
+  ProjetoDetalhado,
+  ProjetoViewState,
+  TabType
 } from '../../../modules/projetos/types/projetoTypes'
-import { 
+import {
   ProjetoHeader,
-  TabNavigation, 
+  TabNavigation,
   GeralTab,
   ItensTab
 } from '../../../modules/projetos/components/sections'
@@ -92,7 +92,7 @@ const MOCK_PROJETO: ProjetoDetalhado = {
     {
       id: 2,
       name: "Desenvolvimento Backend Node.js",
-      unit: "hora", 
+      unit: "hora",
       quantity: 180,
       unitPrice: 160,
       category: "Desenvolvimento",
@@ -181,7 +181,7 @@ const MOCK_PROJETO: ProjetoDetalhado = {
   },
   created_at: new Date('2024-01-15'),
   updated_at: new Date('2024-02-20'),
-  
+
   // Campos calculados
   subtotal: 67400,
   totalImpostos: 8970,
@@ -212,39 +212,39 @@ export default function OrcamentoDetalhePage() {
   useEffect(() => {
     const loadProjeto = async () => {
       setViewState(prev => ({ ...prev, isLoading: true, error: null }))
-      
+
       try {
         // Buscar dados reais do banco
         const projeto = await window.api.budgets.getById(Number(id))
-        
+
         if (!projeto) {
           throw new Error('Projeto não encontrado')
         }
 
         // Calcular valores derivados
         const subtotal = projeto.items?.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0) || 0
-        
-        const totalDescontos = projeto.financial ? 
-          (subtotal * projeto.financial.descontoPct / 100) + projeto.financial.descontoValor 
+
+        const totalDescontos = projeto.financial ?
+          (subtotal * projeto.financial.descontoPct / 100) + projeto.financial.descontoValor
           : 0
-        
+
         // Calcular impostos se existirem dados financeiros
         const baseCalculo = Math.max(0, subtotal - totalDescontos)
         let totalImpostos = 0
-        
+
         if (projeto.financial) {
           const f = projeto.financial
           totalImpostos = baseCalculo * (
-            (f.issAliq || 0) + 
-            (f.icmsAliq || 0) + 
-            (f.pisAliq || 0) + 
+            (f.issAliq || 0) +
+            (f.icmsAliq || 0) +
+            (f.pisAliq || 0) +
             (f.cofinsAliq || 0) +
             (f.ipiAliq || 0)
           ) / 100
         }
-        
+
         const totalFinal = baseCalculo + totalImpostos + (projeto.financial?.frete || 0) + (projeto.financial?.outrosCustos || 0)
-        
+
         // Converter dados do banco para o formato da interface
         const projetoDetalhado: ProjetoDetalhado = {
           ...projeto,
@@ -255,7 +255,7 @@ export default function OrcamentoDetalhePage() {
           margemLiquida: projeto.marginPct || 0,
           percentualImpostos: subtotal > 0 ? (totalImpostos / subtotal) * 100 : 0
         }
-        
+
         setViewState(prev => ({
           ...prev,
           isLoading: false,
@@ -308,7 +308,7 @@ export default function OrcamentoDetalhePage() {
   // Calcular badges para as abas
   const tabBadges = useMemo(() => {
     if (!viewState.projeto) return {}
-    
+
     return {
       itens: viewState.projeto.items?.length || 0,
       documentos: viewState.documentos.length,
@@ -356,10 +356,10 @@ export default function OrcamentoDetalhePage() {
     switch (viewState.currentTab) {
       case 'geral':
         return <GeralTab projeto={viewState.projeto} />
-        
+
       case 'itens':
         return <ItensTab projeto={viewState.projeto} />
-        
+
       case 'financeiro':
         return (
           <div className="bg-card border-border rounded-2xl border p-6 text-center">
@@ -368,7 +368,7 @@ export default function OrcamentoDetalhePage() {
             <p className="text-muted-foreground">Em desenvolvimento...</p>
           </div>
         )
-        
+
       case 'analise':
         return (
           <div className="bg-card border-border rounded-2xl border p-6 text-center">
@@ -377,7 +377,7 @@ export default function OrcamentoDetalhePage() {
             <p className="text-muted-foreground">Em desenvolvimento...</p>
           </div>
         )
-        
+
       case 'documentos':
         return (
           <div className="bg-card border-border rounded-2xl border p-6 text-center">
@@ -386,7 +386,7 @@ export default function OrcamentoDetalhePage() {
             <p className="text-muted-foreground">Em desenvolvimento...</p>
           </div>
         )
-        
+
       case 'historico':
         return (
           <div className="bg-card border-border rounded-2xl border p-6 text-center">
@@ -395,7 +395,7 @@ export default function OrcamentoDetalhePage() {
             <p className="text-muted-foreground">Em desenvolvimento...</p>
           </div>
         )
-        
+
       default:
         return null
     }

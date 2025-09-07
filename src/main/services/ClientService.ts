@@ -3,18 +3,18 @@ import { clienteSchema } from '../../renderer/src/modules/clientes/schemas/clien
 import { z } from 'zod'
 
 export class ClientService {
-  static async getAllClients(): Promise<Client[]> {
+  static async getAllClients(tenantId: string): Promise<Client[]> {
     try {
-      return await ClientModel.findAll()
+      return await ClientModel.findAll(tenantId)
     } catch (error) {
       console.error('Error fetching all clients:', error)
       throw new Error('Failed to fetch clients')
     }
   }
 
-  static async getClientById(id: number): Promise<Client | null> {
+  static async getClientById(tenantId: string, id: number): Promise<Client | null> {
     try {
-      const client = await ClientModel.findById(id)
+      const client = await ClientModel.findById(tenantId, id)
       return client || null
     } catch (error) {
       console.error(`Error fetching client with id ${id}:`, error)
@@ -22,19 +22,20 @@ export class ClientService {
     }
   }
 
-  static async createClient(clientData: z.infer<typeof clienteSchema>): Promise<Client> {
+  static async createClient(tenantId: string, clientData: z.infer<typeof clienteSchema>): Promise<Client> {
     try {
       // Validate input data
       const validatedData = clienteSchema.parse(clientData)
       
-      // Check if client with same CPF/CNPJ already exists
-      const existingClient = await ClientModel.findByCpfCnpj(validatedData.cpfCnpj)
+      // Check if client with same CPF/CNPJ already exists in this tenant
+      const existingClient = await ClientModel.findByCpfCnpj(tenantId, validatedData.cpfCnpj)
       if (existingClient) {
         throw new Error('Cliente com este CPF/CNPJ já existe')
       }
 
       // Transform data to match database schema
       const dbClientData = {
+        tenantId,
         tipo_pessoa: validatedData.tipoPessoa,
         razao_social: validatedData.razaoSocial,
         nome_fantasia: validatedData.nomeFantasia || '',
@@ -73,10 +74,10 @@ export class ClientService {
     }
   }
 
-  static async updateClient(id: number, clientData: Partial<z.infer<typeof clienteSchema>>): Promise<Client | null> {
+  static async updateClient(tenantId: string, id: number, clientData: Partial<z.infer<typeof clienteSchema>>): Promise<Client | null> {
     try {
-      // Check if client exists
-      const existingClient = await ClientModel.findById(id)
+      // Check if client exists in this tenant
+      const existingClient = await ClientModel.findById(tenantId, id)
       if (!existingClient) {
         throw new Error('Cliente não encontrado')
       }
@@ -111,7 +112,7 @@ export class ClientService {
       if (clientData.transportePadrao !== undefined) dbClientData.transporte_padrao = clientData.transportePadrao
       if (clientData.observacoes !== undefined) dbClientData.observacoes = clientData.observacoes
 
-      const updatedClient = await ClientModel.update(id, dbClientData)
+      const updatedClient = await ClientModel.update(tenantId, id, dbClientData)
       return updatedClient || null
     } catch (error) {
       console.error(`Error updating client with id ${id}:`, error)
@@ -119,27 +120,27 @@ export class ClientService {
     }
   }
 
-  static async deleteClient(id: number): Promise<boolean> {
+  static async deleteClient(tenantId: string, id: number): Promise<boolean> {
     try {
-      // Check if client exists
-      const existingClient = await ClientModel.findById(id)
+      // Check if client exists in this tenant
+      const existingClient = await ClientModel.findById(tenantId, id)
       if (!existingClient) {
         throw new Error('Cliente não encontrado')
       }
 
-      return await ClientModel.delete(id)
+      return await ClientModel.delete(tenantId, id)
     } catch (error) {
       console.error(`Error deleting client with id ${id}:`, error)
       throw error
     }
   }
 
-  static async searchClients(searchTerm: string): Promise<Client[]> {
+  static async searchClients(tenantId: string, searchTerm: string): Promise<Client[]> {
     try {
       if (!searchTerm.trim()) {
-        return await this.getAllClients()
+        return await this.getAllClients(tenantId)
       }
-      return await ClientModel.search(searchTerm.trim())
+      return await ClientModel.search(tenantId, searchTerm.trim())
     } catch (error) {
       console.error('Error searching clients:', error)
       throw new Error('Failed to search clients')

@@ -13,37 +13,59 @@ export function FinanceiroDetalhado({ projeto }: FinanceiroDetalhadoProps) {
   const taxBreakdown = calculateTaxBreakdown(projeto)
 
   const CustomWaterfallTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload
+    if (!active || !payload || !Array.isArray(payload) || payload.length === 0) {
+      return null
+    }
+    
+    try {
+      const firstPayload = payload[0]
+      if (!firstPayload || !firstPayload.payload) {
+        return null
+      }
+      
+      const data = firstPayload.payload
       return (
         <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
-          <p className="font-medium text-fg">{label}</p>
+          <p className="font-medium text-fg">{label || 'Dados'}</p>
           <p className="text-sm text-emerald-600">
-            {formatCurrency(Math.abs(data.value))}
+            {formatCurrency(Math.abs(Number(data.value) || 0))}
           </p>
           {data.cumulative && (
             <p className="text-xs opacity-70">
-              Acumulado: {formatCurrency(data.cumulative)}
+              Acumulado: {formatCurrency(Number(data.cumulative) || 0)}
             </p>
           )}
         </div>
       )
+    } catch (error) {
+      console.warn('Error in CustomWaterfallTooltip:', error)
+      return null
     }
-    return null
   }
 
   const CustomTaxTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
+    if (!active || !payload || !Array.isArray(payload) || payload.length === 0) {
+      return null
+    }
+    
+    try {
+      const firstPayload = payload[0]
+      if (!firstPayload || firstPayload.value === undefined) {
+        return null
+      }
+      
       return (
         <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
-          <p className="font-medium text-fg">{label}</p>
+          <p className="font-medium text-fg">{label || 'Dados'}</p>
           <p className="text-sm text-emerald-600">
-            {formatCurrency(payload[0].value)}
+            {formatCurrency(Number(firstPayload.value) || 0)}
           </p>
         </div>
       )
+    } catch (error) {
+      console.warn('Error in CustomTaxTooltip:', error)
+      return null
     }
-    return null
   }
 
   const getComparisonData = () => {
@@ -140,36 +162,49 @@ export function FinanceiroDetalhado({ projeto }: FinanceiroDetalhadoProps) {
 
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart
-                data={waterfallData}
-                margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                <XAxis 
-                  dataKey="name" 
-                  tick={{ fontSize: 11 }}
-                  angle={-45}
-                  textAnchor="end"
-                  height={60}
-                />
-                <YAxis 
-                  tick={{ fontSize: 11 }}
-                  tickFormatter={(value) => formatCurrency(value).replace('R$', '').trim()}
-                />
-                <Tooltip content={<CustomWaterfallTooltip />} />
-                <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                  {waterfallData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Bar>
-                <Line 
-                  type="monotone" 
-                  dataKey="cumulative" 
-                  stroke={CHART_COLORS.secondary} 
-                  strokeWidth={2}
-                  dot={{ r: 4 }}
-                />
-              </ComposedChart>
+              {(() => {
+                try {
+                  return (
+                    <ComposedChart
+                      data={waterfallData}
+                      margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                      <XAxis 
+                        dataKey="name" 
+                        tick={{ fontSize: 11 }}
+                        angle={-45}
+                        textAnchor="end"
+                        height={60}
+                      />
+                      <YAxis 
+                        tick={{ fontSize: 11 }}
+                        tickFormatter={(value) => formatCurrency(Number(value) || 0).replace('R$', '').trim()}
+                      />
+                      <Tooltip content={<CustomWaterfallTooltip />} />
+                      <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                        {waterfallData.filter(entry => entry && entry.color).map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Bar>
+                      <Line 
+                        type="monotone" 
+                        dataKey="cumulative" 
+                        stroke={CHART_COLORS.secondary} 
+                        strokeWidth={2}
+                        dot={{ r: 4 }}
+                      />
+                    </ComposedChart>
+                  )
+                } catch (error) {
+                  console.error('Error rendering ComposedChart:', error)
+                  return (
+                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                      <p className="text-sm">Erro ao carregar gráfico</p>
+                    </div>
+                  )
+                }
+              })()}
             </ResponsiveContainer>
           </div>
         </section>

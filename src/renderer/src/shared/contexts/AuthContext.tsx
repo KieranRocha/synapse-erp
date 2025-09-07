@@ -16,6 +16,7 @@ interface AuthState {
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  getToken: () => string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,21 +36,43 @@ export function AuthProvider({ children }: AuthProviderProps) {
     checkExistingAuth();
   }, []);
 
-  const checkExistingAuth = () => {
+  const checkExistingAuth = async () => {
     try {
-      const storedUser = localStorage.getItem('auth-user');
       const storedToken = localStorage.getItem('auth-token');
       
-      if (storedUser && storedToken) {
-        const user = JSON.parse(storedUser);
-        setAuthState({
-          user,
-          isLoading: false,
-          isAuthenticated: true,
-        });
+      if (storedToken && window.electronAPI?.validate) {
+        // Valida o token no backend
+        const user = await window.electronAPI.validate(storedToken);
         
-        // Notifica o processo principal que o usuário está logado
-        window.electronAPI?.notifyAuthState?.(true);
+        if (user) {
+          const formattedUser: User = {
+            id: user.id,
+            name: user.nome,
+            email: user.email,
+            role: user.cargo || 'user'
+          };
+
+          localStorage.setItem('auth-user', JSON.stringify(formattedUser));
+          
+          setAuthState({
+            user: formattedUser,
+            isLoading: false,
+            isAuthenticated: true,
+          });
+          
+          // Notifica o processo principal que o usuário está logado
+          window.electronAPI?.notifyAuthState?.(true);
+        } else {
+          // Token inválido, limpa storage
+          localStorage.removeItem('auth-user');
+          localStorage.removeItem('auth-token');
+          
+          setAuthState({
+            user: null,
+            isLoading: false,
+            isAuthenticated: false,
+          });
+        }
       } else {
         setAuthState({
           user: null,
@@ -59,6 +82,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     } catch (error) {
       console.error('Error checking auth state:', error);
+      // Em caso de erro, limpa storage
+      localStorage.removeItem('auth-user');
+      localStorage.removeItem('auth-token');
+      
       setAuthState({
         user: null,
         isLoading: false,
@@ -71,56 +98,66 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setAuthState(prev => ({ ...prev, isLoading: true }));
       
-      // Simulação de autenticação (substituir por API real)
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock de validação simples
-      if (email && password.length >= 6) {
-        const user: User = {
-          id: '1',
-          name: email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1),
-          email,
-          role: 'admin'
-        };
-
-        const token = `mock-token-${Date.now()}`;
-        
-        // Salva no localStorage
-        localStorage.setItem('auth-user', JSON.stringify(user));
-        localStorage.setItem('auth-token', token);
-        
-        setAuthState({
-          user,
-          isLoading: false,
-          isAuthenticated: true,
-        });
-
-        // Notifica o processo principal sobre o login
-        window.electronAPI?.notifyAuthState?.(true);
-        
-      } else {
-        throw new Error('Credenciais inválidas');
+      // Chama a API real de autenticação
+      if (!window.electronAPI?.login) {
+        throw new Error('API de autenticação não disponível');
       }
+
+      const result = await window.electronAPI.login(email, password);
+      
+      const user: User = {
+        id: result.user.id,
+        name: result.user.nome,
+        email: result.user.email,
+        role: result.user.cargo || 'user'
+      };
+
+      // Salva no localStorage
+      localStorage.setItem('auth-user', JSON.stringify(user));
+      localStorage.setItem('auth-token', result.token);
+      
+      setAuthState({
+        user,
+        isLoading: false,
+        isAuthenticated: true,
+      });
+
+      // Notifica o processo principal sobre o login
+      window.electronAPI?.notifyAuthState?.(true);
+        
     } catch (error) {
       setAuthState(prev => ({ ...prev, isLoading: false }));
       throw error;
     }
   };
 
-  const logout = () => {
-    // Remove do localStorage
-    localStorage.removeItem('auth-user');
-    localStorage.removeItem('auth-token');
-    localStorage.removeItem('erp-auth-email'); // Remove também o email salvo
-    
-    setAuthState({
-      user: null,
-      isLoading: false,
-      isAuthenticated: false,
-    });
+  const logout = async () => {
+    try {
+      // Chama a API de logout se disponível
+      if (window.electronAPI?.logout) {
+        await window.electronAPI.logout();
+      }
+    } catch (error) {
+      console.error('Error during logout:', error);
+    } finally {
+      // Remove do localStorage
+      localStorage.removeItem('auth-user');
+      localStorage.removeItem('auth-token');
+      localStorage.removeItem('erp-auth-email'); // Remove também o email salvo
+      
+      setAuthState({
+        user: null,
+        isLoading: false,
+        isAuthenticated: false,
+      });
 
-    // Notifica o processo principal sobre o logout
-    window.electronAPI?.notifyAuthState?.(false);
+      // Notifica o processo principal sobre o logout
+      window.electronAPI?.notifyAuthState?.(false);
+    }
+  };
+
+  const getToken = (): string | null => {
+    return localStorage.getItem('auth-token');
   };
 
   return (
@@ -128,6 +165,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       ...authState,
       login,
       logout,
+      getToken,
     }}>
       {children}
     </AuthContext.Provider>

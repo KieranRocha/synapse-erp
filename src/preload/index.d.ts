@@ -23,6 +23,10 @@ declare global {
     }
     electronAPI?: {
       notifyAuthState: (isAuthenticated: boolean) => Promise<void>
+      login: (email: string, password: string) => Promise<{ user: any; token: string }>
+      logout: () => Promise<{ success: boolean }>
+      validate: (token: string) => Promise<any | null>
+      profile: (token: string) => Promise<any | null>
     }
   }
 }

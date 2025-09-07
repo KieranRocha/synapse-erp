@@ -5,6 +5,7 @@ import icon from '../../resources/icon.png?asset'
 import { initializeDatabase, closeDatabase } from './database'
 import { registerClientHandlers } from './handlers/clientHandlers'
 import { registerBudgetHandlers } from './handlers/budgetHandlers'
+import { registerAuthHandlers } from './handlers/authHandlers'
 
 let loginWindow: BrowserWindow | null = null
 let mainWindow: BrowserWindow | null = null
@@ -110,6 +111,7 @@ app.whenReady().then(async () => {
   // Register IPC handlers
   registerClientHandlers()
   registerBudgetHandlers()
+  registerAuthHandlers()
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
