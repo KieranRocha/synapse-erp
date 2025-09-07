@@ -23,6 +23,11 @@ const api = {
   }
 }
 
+// Auth API
+const authAPI = {
+  notifyAuthState: (isAuthenticated: boolean) => ipcRenderer.invoke('auth:notify-state', isAuthenticated)
+}
+
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
 // just add to the DOM global.
@@ -30,12 +35,15 @@ try {
   if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('api', api)
+    contextBridge.exposeInMainWorld('electronAPI', authAPI)
     console.log('✅ API exposed to main world successfully via contextBridge')
   } else {
     // @ts-ignore (define in dts)
     window.electron = electronAPI
     // @ts-ignore (define in dts)
     window.api = api
+    // @ts-ignore (define in dts)
+    window.electronAPI = authAPI
     console.log('✅ API attached to window object successfully (no context isolation)')
   }
 } catch (error) {
@@ -46,6 +54,8 @@ try {
     window.electron = electronAPI
     // @ts-ignore 
     window.api = api
+    // @ts-ignore
+    window.electronAPI = authAPI
     console.log('✅ API attached as fallback')
   } catch (fallbackError) {
     console.error('❌ Fallback also failed:', fallbackError)

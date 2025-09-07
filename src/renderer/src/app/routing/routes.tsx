@@ -3,6 +3,7 @@ import { RouteObject } from "react-router-dom";
 import AuthLogin from "../../pages/Auth/Login";
 import App from "../layout/App";
 import BeautifulPage from "../../pages/BeautifulPage/BeautifulPage"; // placeholder estiloso
+import { AuthGuard, GuestGuard } from "../../shared/components/auth/AuthGuard";
 
 // Import from new module structure
 import { 
@@ -19,13 +20,24 @@ import {
 
 import DatabaseTestPage from "../../pages/Debug/DatabaseTestPage";
 export const routes: RouteObject[] = [
-    // Rotas fora do layout (ex.: auth)
-    { path: "/auth/login", element: <AuthLogin /> },
+    // Rotas fora do layout (ex.: auth) - apenas para usuários não logados
+    { 
+        path: "/auth/login", 
+        element: (
+            <GuestGuard>
+                <AuthLogin />
+            </GuestGuard>
+        ) 
+    },
 
-    // Rotas com layout persistente (Sidebar + Header ficam em <App />)
+    // Rotas com layout persistente (Sidebar + Header ficam em <App />) - protegidas por autenticação
     {
         path: "/",
-        element: <App />, // <App /> precisa ter <Outlet />
+        element: (
+            <AuthGuard>
+                <App />
+            </AuthGuard>
+        ), // <App /> precisa ter <Outlet />
         children: [
             {
                 index: true,

@@ -21,5 +21,8 @@ declare global {
         search: (searchTerm: string) => Promise<any[]>
       }
     }
+    electronAPI?: {
+      notifyAuthState: (isAuthenticated: boolean) => Promise<void>
+    }
   }
 }

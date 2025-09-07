@@ -8,7 +8,9 @@ import {
   Moon,
   ChevronLeft,
   ChevronRight,
+  LogOut,
 } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
 
 /********************
  * TEMA (CSS-first v4)
@@ -70,9 +72,23 @@ export default function Header({
 }: HeaderProps) {
   const navigate = useNavigate();
   const { resolved, toggle } = useTheme();
+  const { user, logout } = useAuth();
 
   const [notifications, setNotifications] = useState(3);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  // Fechar menu ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showUserMenu && !(event.target as Element).closest('.user-menu-container')) {
+        setShowUserMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showUserMenu]);
 
   const handleRefresh = () => {
     setIsRefreshing(true);
@@ -248,14 +264,37 @@ export default function Header({
         </button>
 
         {/* Usuário */}
-        <div className="flex items-center gap-3 border-l border-border pl-4">
-          <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-semibold">
-            AD
-          </div>
-          <div>
-            <p className="font-semibold text-sm text-fg">Administrador</p>
-            <p className="text-xs text-muted-foreground">admin@empresa.com</p>
-          </div>
+        <div className="relative flex items-center gap-3 border-l border-border pl-4 user-menu-container">
+          <button
+            onClick={() => setShowUserMenu(!showUserMenu)}
+            className="flex items-center gap-3 hover:bg-muted rounded-lg p-2 transition-colors"
+          >
+            <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-semibold">
+              {user?.name ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'U'}
+            </div>
+            <div className="text-left">
+              <p className="font-semibold text-sm text-fg">{user?.name || 'Usuário'}</p>
+              <p className="text-xs text-muted-foreground">{user?.email || 'user@empresa.com'}</p>
+            </div>
+          </button>
+
+          {/* Menu do usuário */}
+          {showUserMenu && (
+            <div className="absolute top-full right-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-lg z-50">
+              <div className="p-2">
+                <button
+                  onClick={() => {
+                    logout();
+                    setShowUserMenu(false);
+                  }}
+                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left hover:bg-muted rounded-md transition-colors text-red-600 hover:text-red-700"
+                >
+                  <LogOut size={16} />
+                  Sair
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </header>

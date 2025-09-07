@@ -6,11 +6,53 @@ import { initializeDatabase, closeDatabase } from './database'
 import { registerClientHandlers } from './handlers/clientHandlers'
 import { registerBudgetHandlers } from './handlers/budgetHandlers'
 
-function createWindow(): void {
-  // Create the browser window.
-  const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+let loginWindow: BrowserWindow | null = null
+let mainWindow: BrowserWindow | null = null
+
+function createLoginWindow(): void {
+  // Create the login window (smaller)
+  loginWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    show: false,
+    autoHideMenuBar: true,
+    resizable: false,
+    center: true,
+    ...(process.platform === 'linux' ? { icon } : {}),
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.cjs'),
+      sandbox: false,
+      contextIsolation: true,
+      nodeIntegration: false
+    }
+  })
+
+  loginWindow.on('ready-to-show', () => {
+    loginWindow?.show()
+  })
+
+  loginWindow.on('closed', () => {
+    loginWindow = null
+  })
+
+  loginWindow.webContents.setWindowOpenHandler((details) => {
+    shell.openExternal(details.url)
+    return { action: 'deny' }
+  })
+
+  // Load login page
+  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+    loginWindow.loadURL(process.env['ELECTRON_RENDERER_URL'] + '#/auth/login')
+  } else {
+    loginWindow.loadFile(join(__dirname, '../renderer/index.html'), { hash: '/auth/login' })
+  }
+}
+
+function createMainWindow(): void {
+  // Create the main app window (larger)
+  mainWindow = new BrowserWindow({
+    width: 1200,
+    height: 800,
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
@@ -23,7 +65,11 @@ function createWindow(): void {
   })
 
   mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
+    mainWindow?.show()
+  })
+
+  mainWindow.on('closed', () => {
+    mainWindow = null
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -31,13 +77,18 @@ function createWindow(): void {
     return { action: 'deny' }
   })
 
-  // HMR for renderer base on electron-vite cli.
-  // Load the remote URL for development or the local html file for production.
+  // Load main app
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+}
+
+function createWindow(): void {
+  // Start with login window by default
+  // In a real app, you might check for stored auth tokens here
+  createLoginWindow()
 }
 
 // This method will be called when Electron has finished
@@ -70,12 +121,43 @@ app.whenReady().then(async () => {
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
 
+  // Auth IPC handlers
+  ipcMain.handle('auth:notify-state', (_event, isAuthenticated: boolean) => {
+    if (isAuthenticated) {
+      // User logged in - switch to main window
+      if (loginWindow) {
+        loginWindow.close()
+      }
+
+      if (!mainWindow) {
+        createMainWindow()
+      } else {
+        mainWindow.show()
+        mainWindow.focus()
+      }
+    } else {
+      // User logged out - switch to login window
+      if (mainWindow) {
+        mainWindow.close()
+      }
+
+      if (!loginWindow) {
+        createLoginWindow()
+      } else {
+        loginWindow.show()
+        loginWindow.focus()
+      }
+    }
+  })
+
   createWindow()
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow()
+    }
   })
 })
 
@@ -85,7 +167,7 @@ app.whenReady().then(async () => {
 app.on('window-all-closed', async () => {
   // Close database connection before quitting
   await closeDatabase()
-  
+
   if (process.platform !== 'darwin') {
     app.quit()
   }

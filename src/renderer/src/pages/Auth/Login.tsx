@@ -1,6 +1,9 @@
 import { useEffect, useState, ChangeEvent, FormEvent, ReactNode } from "react";
-import { Factory, Mail, Lock, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Factory, Mail, Lock, Eye, EyeOff, ArrowLeft, LoaderIcon, Loader2Icon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../shared/contexts/AuthContext";
+import logoSrc from "../../assets/logo-dark.svg";
+import { Button } from "@renderer/shared";
 
 /*****************************
  * Helpers (validators)
@@ -34,9 +37,9 @@ function Field({
 }) {
     return (
         <label className="block w-full">
-            <span className="text-sm text-gray-700">{label}</span>
+            <span className="text-sm text-text">{label}</span>
             <div
-                className={`mt-1 flex items-center gap-2 rounded-lg border px-3 ${error ? "border-red-400" : "border-gray-300"
+                className={`mt-1 flex items-center gap-2 rounded-lg bg-card px-3  ${error ? " border border-red-400" : "border-gray-300"
                     }`}
             >
                 {Icon ? <Icon size={16} className="text-gray-400" /> : null}
@@ -46,7 +49,7 @@ function Field({
                     onChange={onChange}
                     placeholder={placeholder}
                     autoComplete={autoComplete}
-                    className="w-full py-2 outline-none bg-transparent placeholder-gray-400 text-gray-900"
+                    className="w-full py-2 outline-none bg-transparent placeholder-gray-400 text-fg"
                 />
                 {rightSlot}
             </div>
@@ -62,20 +65,16 @@ function Field({
  *****************************/
 export default function AuthLogin({
     brand = "ERP Máquinas",
-    onLogin,
-    onForgot,
 }: {
     brand?: string;
-    onLogin?: (payload: { email: string }) => void;
-    onForgot?: (email?: string) => void;
 }) {
     const navigate = useNavigate();
+    const { login, isLoading } = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [remember, setRemember] = useState(true);
     const [showPass, setShowPass] = useState(false);
-    const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-    const [loading, setLoading] = useState(false);
+    const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
     const [message, setMessage] = useState("");
 
     // remember me (só mock/localStorage)
@@ -84,7 +83,7 @@ export default function AuthLogin({
         if (saved) setEmail(saved);
     }, []);
 
-    const submit = (e: FormEvent) => {
+    const submit = async (e: FormEvent) => {
         e.preventDefault();
         const errs: typeof errors = {};
         if (!validateEmail(email)) errs.email = "E-mail inválido";
@@ -92,35 +91,28 @@ export default function AuthLogin({
         setErrors(errs);
         if (Object.keys(errs).length) return;
 
-        setLoading(true);
-        setTimeout(() => {
-            setLoading(false);
+        try {
+            await login(email, password);
             if (remember) localStorage.setItem("erp-auth-email", email);
-            onLogin ? onLogin({ email }) : setMessage("Login efetuado (mock)");
-        }, 600);
+            setMessage("Login realizado com sucesso!");
+            // O redirecionamento será feito automaticamente pelo AuthGuard
+        } catch (error) {
+            console.error('Login error:', error);
+            setErrors({ general: error instanceof Error ? error.message : "Erro ao fazer login" });
+        }
     };
 
     return (
-        <div className="min-h-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen flex items-center bg-bg justify-center py-12 px-4 sm:px-6 lg:px-8">
             <div className="w-full max-w-sm">
-                {/* Back Button */}
-                <button
-                    onClick={() => navigate('/')}
-                    className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-4 transition-colors"
-                >
-                    <ArrowLeft size={16} />
-                    <span className="text-sm">Voltar</span>
-                </button>
 
                 {/* Brand */}
-                <div className="flex items-center gap-2 mb-6">
-                    <Factory size={20} className="text-blue-600" />
-                    <h1 className="text-base font-semibold text-gray-900">{brand}</h1>
+                <div className="flex items-center gap-2 mb-6 justify-center">
+                    <img src={logoSrc} alt="Logo" className="h-20 w-auto" />
                 </div>
 
                 {/* Card */}
-                <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-5">
-                    <h2 className="text-lg font-medium text-gray-900 mb-4">Acesse sua conta</h2>
+                <div className="">
 
                     <form onSubmit={submit} className="space-y-3">
                         <Field
@@ -132,6 +124,7 @@ export default function AuthLogin({
                             placeholder="voce@empresa.com"
                             autoComplete="email"
                             type="email"
+
                         />
 
                         <Field
@@ -168,22 +161,26 @@ export default function AuthLogin({
 
                             <button
                                 type="button"
-                                onClick={() => (onForgot ? onForgot(email) : setMessage("Redirecionar para /auth/forgot (mock)"))}
-                                className="text-sm text-blue-600 hover:underline"
+                                onClick={() => setMessage("Funcionalidade em desenvolvimento")}
+                                className="text-xs text-text underline cursor-pointer hover:underline"
                             >
                                 Esqueci minha senha
                             </button>
                         </div>
 
-                        <button
+                        <Button
                             type="submit"
-                            disabled={loading}
-                            className={`w-full py-2.5 rounded-lg text-white text-sm ${loading ? "bg-gray-400" : "bg-gray-900 hover:bg-black"
-                                }`}
+                            disabled={isLoading || !email || !password}
+                            variant={!email || !password ? "danger" : "success"}
+                            className={`w-full py-2.5 rounded-lg  }`}
                         >
-                            {loading ? "Processando..." : "Entrar"}
-                        </button>
+                            {isLoading ? <Loader2Icon className="animate-spin" /> : "Entrar"}
+                        </Button>
                     </form>
+
+                    {errors.general ? (
+                        <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2 mt-4">{errors.general}</p>
+                    ) : null}
 
                     {message ? (
                         <p className="text-xs text-green-700 bg-green-50 border border-green-200 rounded-md px-3 py-2 mt-4">{message}</p>
