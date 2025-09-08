@@ -2,6 +2,8 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { prisma } from '../database'
 import { UsuarioWithoutPassword, AuthResult, CreateUsuarioData } from '../models/Usuario'
+import { AppError } from '../utils/AppError'
+import { ErrorCode } from '../utils/ErrorCodes'
 
 export class AuthService {
   private readonly jwtSecret: string
@@ -23,7 +25,7 @@ export class AuthService {
 
   generateToken(userId: string, tenantId: string): string {
     const payload = { userId, tenantId };
-    const options = { expiresIn: this.jwtExpiresIn };
+    const options: jwt.SignOptions = { expiresIn: this.jwtExpiresIn as any };
     return jwt.sign(payload, this.jwtSecret, options);
   }
 
@@ -31,7 +33,7 @@ export class AuthService {
     return jwt.verify(token, this.jwtSecret) as { userId: string; tenantId: string }
   }
 
-  async authenticate(email: string, password: string): Promise<AuthResult | null> {
+  async authenticate(email: string, password: string): Promise<AuthResult> {
     try {
       const usuario = await prisma.usuario.findFirst({
         where: {
@@ -56,12 +58,12 @@ export class AuthService {
       })
 
       if (!usuario) {
-        return null
+        throw AppError.emailNotFound(email)
       }
 
       const isPasswordValid = await this.comparePassword(password, usuario.senhaHash)
       if (!isPasswordValid) {
-        return null
+        throw AppError.invalidCredentials({ email })
       }
 
       // Update last login
@@ -81,8 +83,28 @@ export class AuthService {
         token
       }
     } catch (error) {
+      if (error instanceof AppError) {
+        throw error // Re-throw our structured errors
+      }
+      
       console.error('Authentication error:', error)
-      return null
+      
+      // Check if it's a database connection issue
+      if (error && typeof error === 'object' && 'code' in error) {
+        const dbError = error as any
+        if (dbError.code === 'P1001' || dbError.code === 'ECONNREFUSED') {
+          throw AppError.databaseUnavailable(error)
+        }
+      }
+      
+      // Generic server error for unexpected issues
+      throw new AppError({
+        code: ErrorCode.SERVER_ERROR,
+        message: 'Erro interno no serviço de autenticação',
+        details: error,
+        severity: 'error',
+        status: 500
+      })
     }
   }
 
@@ -152,13 +174,32 @@ export class AuthService {
       })
 
       if (!usuario) {
-        return null
+        return null // Token valid but user not found/inactive - return null for silent handling
       }
 
       const { senhaHash, ...userWithoutPassword } = usuario
       return userWithoutPassword
     } catch (error) {
+      if (error && typeof error === 'object' && 'name' in error && error.name === 'TokenExpiredError') {
+        // JWT expired - this is expected behavior, return null
+        return null
+      }
+      if (error && typeof error === 'object' && 'name' in error && error.name === 'JsonWebTokenError') {
+        // JWT invalid - this is expected behavior, return null  
+        return null
+      }
+      
       console.error('Token validation error:', error)
+      
+      // For unexpected database errors, we might want to throw
+      if (error && typeof error === 'object' && 'code' in error) {
+        const dbError = error as any
+        if (dbError.code === 'P1001' || dbError.code === 'ECONNREFUSED') {
+          throw AppError.databaseUnavailable(error)
+        }
+      }
+      
+      // For other unexpected errors, return null (token considered invalid)
       return null
     }
   }

@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { fromUnknown, emitToastForError } from '../errors/adapter';
+import { useToast } from '../hooks/useToast';
 
 export interface User {
   id: string;
@@ -31,6 +33,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isLoading: true,
     isAuthenticated: false,
   });
+  
+  const toast = useToast();
 
   useEffect(() => {
     checkExistingAuth();
@@ -82,6 +86,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     } catch (error) {
       console.error('Error checking auth state:', error);
+      
+      // Trata erro de forma centralizada
+      const appError = fromUnknown(error);
+      if (appError.severity === 'error') {
+        emitToastForError(toast, appError);
+      }
+      
       // Em caso de erro, limpa storage
       localStorage.removeItem('auth-user');
       localStorage.removeItem('auth-token');
@@ -98,9 +109,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setAuthState(prev => ({ ...prev, isLoading: true }));
       
-      // Chama a API real de autenticação
+      // Verifica se a API de autenticação está disponível
       if (!window.electronAPI?.login) {
-        throw new Error('API de autenticação não disponível');
+        const apiError = new Error('AUTH_API_UNAVAILABLE');
+        apiError.name = 'AUTH_API_UNAVAILABLE';
+        throw apiError;
       }
 
       const result = await window.electronAPI.login(email, password);
@@ -127,7 +140,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
         
     } catch (error) {
       setAuthState(prev => ({ ...prev, isLoading: false }));
-      throw error;
+      
+      // Processa e relança o erro para que o componente possa lidar com ele
+      const appError = fromUnknown(error);
+      console.error('Login failed:', appError);
+      
+      // Rejeita com o erro processado para manter compatibilidade
+      throw appError;
     }
   };
 

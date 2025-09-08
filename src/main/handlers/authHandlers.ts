@@ -1,32 +1,36 @@
 import { ipcMain, IpcMainInvokeEvent } from 'electron'
 import { AuthService } from '../services/AuthService'
 import { IPCLogger } from '../utils/ipcLogger'
+import { AppError } from '../utils/AppError'
 
 const authService = new AuthService()
 
 export function registerAuthHandlers() {
   // Login handler
-  ipcMain.handle('auth:login', async (_event: IpcMainInvokeEvent, email: string, password: string) => {
-    try {
-      IPCLogger.logRequest('auth:login', [email])
-      
-      if (!email || !password) {
-        throw new Error('Email e senha são obrigatórios')
-      }
+  ipcMain.handle(
+    'auth:login',
+    async (_event: IpcMainInvokeEvent, email: string, password: string) => {
+      try {
+        IPCLogger.logRequest('auth:login', [email])
 
-      const result = await authService.authenticate(email, password)
-      
-      if (!result) {
-        throw new Error('Credenciais inválidas')
-      }
+        if (!email || !password) {
+          throw AppError.validationRequired('E-mail e senha')
+        }
 
-      IPCLogger.logResponse('auth:login', { userId: result.user.id }, 0)
-      return result
-    } catch (error) {
-      IPCLogger.logError('auth:login', error as Error, 0)
-      throw error
+        const result = await authService.authenticate(email, password)
+
+        if (!result) {
+          throw AppError.invalidCredentials()
+        }
+
+        IPCLogger.logResponse('auth:login', { userId: result.user.id }, 0)
+        return result
+      } catch (error) {
+        IPCLogger.logError('auth:login', error as Error, 0)
+        throw error
+      }
     }
-  })
+  )
 
   // Validate token handler
   ipcMain.handle('auth:validate', async (_event: IpcMainInvokeEvent, token: string) => {
@@ -36,13 +40,13 @@ export function registerAuthHandlers() {
       }
 
       const user = await authService.validateToken(token)
-      
+
       if (user) {
         IPCLogger.logResponse('auth:validate', { userId: user.id }, 0)
       } else {
         IPCLogger.logResponse('auth:validate', null, 0)
       }
-      
+
       return user
     } catch (error) {
       IPCLogger.logError('auth:validate', error as Error, 0)
@@ -66,13 +70,13 @@ export function registerAuthHandlers() {
   ipcMain.handle('auth:profile', async (_event: IpcMainInvokeEvent, token: string) => {
     try {
       if (!token) {
-        throw new Error('Token não fornecido')
+        throw AppError.validationRequired('Token')
       }
 
       const user = await authService.validateToken(token)
-      
+
       if (!user) {
-        throw new Error('Token inválido ou expirado')
+        throw AppError.tokenInvalid()
       }
 
       return user

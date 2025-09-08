@@ -1,29 +1,30 @@
 import { AuthService } from '../services/AuthService'
+import { AppError } from './AppError'
 
 const authService = new AuthService()
 
 export async function extractTenantFromRequest(token?: string): Promise<string> {
   if (!token) {
-    throw new Error('Token de autenticação não fornecido')
+    throw AppError.validationRequired('Token de autenticação')
   }
 
   try {
     const decoded = authService.verifyToken(token)
     return decoded.tenantId
   } catch (error) {
-    throw new Error('Token inválido ou expirado')
+    throw AppError.tokenInvalid(error)
   }
 }
 
 export async function validateUserAccess(token: string): Promise<{ tenantId: string, userId: string }> {
   if (!token) {
-    throw new Error('Token de autenticação não fornecido')
+    throw AppError.validationRequired('Token de autenticação')
   }
 
   try {
     const user = await authService.validateToken(token)
     if (!user) {
-      throw new Error('Usuário não encontrado ou inativo')
+      throw AppError.userNotFound('token-user')
     }
 
     return {
@@ -31,6 +32,9 @@ export async function validateUserAccess(token: string): Promise<{ tenantId: str
       userId: user.id
     }
   } catch (error) {
-    throw new Error('Acesso negado: ' + (error instanceof Error ? error.message : 'erro desconhecido'))
+    if (error instanceof AppError) {
+      throw error // Re-throw AppError as-is
+    }
+    throw AppError.permissionDenied(error instanceof Error ? error.message : 'erro desconhecido')
   }
 }

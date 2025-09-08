@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { Loader2Icon } from 'lucide-react';
 
 interface AuthGuardProps {
   children: ReactNode;
@@ -16,7 +17,7 @@ export function AuthGuard({ children, fallback }: AuthGuardProps) {
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex items-center gap-2">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
-          <span className="text-gray-600">Verificando autenticação...</span>
+          <Loader2Icon className='w-6 h-6 animate-spin' />
         </div>
       </div>
     );
@@ -40,7 +41,7 @@ export function GuestGuard({ children }: { children: ReactNode }) {
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex items-center gap-2">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
-          <span className="text-gray-600">Carregando...</span>
+          <Loader2Icon className='w-6 h-6 animate-spin' />
         </div>
       </div>
     );

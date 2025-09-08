@@ -3,13 +3,55 @@ import { Factory, Mail, Lock, Eye, EyeOff, ArrowLeft, LoaderIcon, Loader2Icon } 
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../shared/contexts/AuthContext";
 import logoSrc from "../../assets/logo-dark.svg";
-import { Button } from "@renderer/shared";
+import { Button } from "../../shared/components/ui/Button";
+import { fromUnknown, emitToastForError } from "../../shared/errors/adapter";
+import { useToast } from "../../shared/hooks/useToast";
 
 /*****************************
  * Helpers (validators)
  *****************************/
-const validateEmail = (v: string) => /[^@\s]+@[^@\s]+\.[^@\s]+/.test(v);
-const validatePassword = (v: string) => (v || "").trim().length >= 6;
+const validateEmail = (v: string): { isValid: boolean; error?: string } => {
+    const email = (v || "").trim();
+    if (!email) return { isValid: false, error: "E-mail é obrigatório" };
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return { isValid: false, error: "Formato de e-mail inválido" };
+    }
+    
+    return { isValid: true };
+};
+
+const validatePassword = (v: string): { isValid: boolean; error?: string } => {
+    const password = (v || "").trim();
+    if (!password) return { isValid: false, error: "Senha é obrigatória" };
+    
+    if (password.length < 6) {
+        return { isValid: false, error: "Senha deve ter no mínimo 6 caracteres" };
+    }
+    
+    return { isValid: true };
+};
+
+const checkPasswordStrength = (password: string): { level: 'weak' | 'medium' | 'strong'; message: string } => {
+    const hasLower = /[a-z]/.test(password);
+    const hasUpper = /[A-Z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    const length = password.length;
+    
+    let score = 0;
+    if (hasLower) score++;
+    if (hasUpper) score++;
+    if (hasNumber) score++;
+    if (hasSpecial) score++;
+    if (length >= 8) score++;
+    if (length >= 12) score++;
+    
+    if (score < 3) return { level: 'weak', message: 'Senha fraca' };
+    if (score < 5) return { level: 'medium', message: 'Senha média' };
+    return { level: 'strong', message: 'Senha forte' };
+};
 
 /*****************************
  * Minimal Input (same visual style do Auth Minimal)
@@ -70,12 +112,13 @@ export default function AuthLogin({
 }) {
     const navigate = useNavigate();
     const { login, isLoading } = useAuth();
+    const toast = useToast();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [remember, setRemember] = useState(true);
     const [showPass, setShowPass] = useState(false);
-    const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
-    const [message, setMessage] = useState("");
+    const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+    const [retryCount, setRetryCount] = useState(0);
 
     // remember me (só mock/localStorage)
     useEffect(() => {
@@ -85,20 +128,45 @@ export default function AuthLogin({
 
     const submit = async (e: FormEvent) => {
         e.preventDefault();
+        
+        // Validação dos campos
+        const emailValidation = validateEmail(email);
+        const passwordValidation = validatePassword(password);
+        
         const errs: typeof errors = {};
-        if (!validateEmail(email)) errs.email = "E-mail inválido";
-        if (!validatePassword(password)) errs.password = "Mínimo de 6 caracteres";
+        if (!emailValidation.isValid) errs.email = emailValidation.error;
+        if (!passwordValidation.isValid) errs.password = passwordValidation.error;
+        
         setErrors(errs);
         if (Object.keys(errs).length) return;
 
         try {
             await login(email, password);
             if (remember) localStorage.setItem("erp-auth-email", email);
-            setMessage("Login realizado com sucesso!");
+            
+            toast.success("Login realizado com sucesso!");
+            setRetryCount(0); // Reset retry count on success
+            
             // O redirecionamento será feito automaticamente pelo AuthGuard
         } catch (error) {
-            console.error('Login error:', error);
-            setErrors({ general: error instanceof Error ? error.message : "Erro ao fazer login" });
+            console.error('🚨 [Login] Caught error:', error);
+            console.error('🚨 [Login] Error type:', typeof error);
+            console.error('🚨 [Login] Error instanceof Error:', error instanceof Error);
+            
+            const appErr = fromUnknown(error);
+            console.log('🚨 [Login] Processed error:', appErr);
+            
+            // Emite toast baseado no tipo de erro
+            console.log('🚨 [Login] Calling emitToastForError...');
+            emitToastForError(toast, appErr);
+            
+            // Se é um erro retryable e não excedeu o limite de tentativas
+            if (appErr.retryable && retryCount < 3) {
+                setRetryCount(prev => prev + 1);
+                setTimeout(() => {
+                    toast.info(`Tentativa ${retryCount + 1} de 3...`);
+                }, 2000);
+            }
         }
     };
 
@@ -178,13 +246,6 @@ export default function AuthLogin({
                         </Button>
                     </form>
 
-                    {errors.general ? (
-                        <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2 mt-4">{errors.general}</p>
-                    ) : null}
-
-                    {message ? (
-                        <p className="text-xs text-green-700 bg-green-50 border border-green-200 rounded-md px-3 py-2 mt-4">{message}</p>
-                    ) : null}
                 </div>
 
                 {/* Footer */}
@@ -200,8 +261,10 @@ export default function AuthLogin({
  * Dev tests (run only in dev)
  *****************************/
 if (typeof process !== "undefined" && process.env.NODE_ENV !== "production") {
-    console.assert(validateEmail("a@b.com") === true, "Email válido falhou");
-    console.assert(validateEmail("x") === false, "Email inválido passou");
-    console.assert(validatePassword("123456") === true, "Senha mínima falhou");
-    console.assert(validatePassword("123") === false, "Senha curta passou");
+    console.assert(validateEmail("a@b.com").isValid === true, "Email válido falhou");
+    console.assert(validateEmail("x").isValid === false, "Email inválido passou");
+    console.assert(validatePassword("123456").isValid === true, "Senha mínima falhou");
+    console.assert(validatePassword("123").isValid === false, "Senha curta passou");
+    console.assert(validateEmail("").isValid === false, "Email vazio passou");
+    console.assert(validatePassword("").isValid === false, "Senha vazia passou");
 }
