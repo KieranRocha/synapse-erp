@@ -1,10 +1,9 @@
 import { useEffect, useState, ChangeEvent, FormEvent, ReactNode } from "react";
-import { Factory, Mail, Lock, Eye, EyeOff, ArrowLeft, LoaderIcon, Loader2Icon } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Loader2Icon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../shared/contexts/AuthContext";
 import logoSrc from "../../assets/logo-dark.svg";
 import { Button } from "../../shared/components/ui/Button";
-import { fromUnknown, emitToastForError } from "../../shared/errors/adapter";
 import { useToast } from "../../shared/hooks/useToast";
 
 /*****************************
@@ -13,23 +12,23 @@ import { useToast } from "../../shared/hooks/useToast";
 const validateEmail = (v: string): { isValid: boolean; error?: string } => {
     const email = (v || "").trim();
     if (!email) return { isValid: false, error: "E-mail é obrigatório" };
-    
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
         return { isValid: false, error: "Formato de e-mail inválido" };
     }
-    
+
     return { isValid: true };
 };
 
 const validatePassword = (v: string): { isValid: boolean; error?: string } => {
     const password = (v || "").trim();
     if (!password) return { isValid: false, error: "Senha é obrigatória" };
-    
+
     if (password.length < 6) {
         return { isValid: false, error: "Senha deve ter no mínimo 6 caracteres" };
     }
-    
+
     return { isValid: true };
 };
 
@@ -39,7 +38,7 @@ const checkPasswordStrength = (password: string): { level: 'weak' | 'medium' | '
     const hasNumber = /\d/.test(password);
     const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
     const length = password.length;
-    
+
     let score = 0;
     if (hasLower) score++;
     if (hasUpper) score++;
@@ -47,7 +46,7 @@ const checkPasswordStrength = (password: string): { level: 'weak' | 'medium' | '
     if (hasSpecial) score++;
     if (length >= 8) score++;
     if (length >= 12) score++;
-    
+
     if (score < 3) return { level: 'weak', message: 'Senha fraca' };
     if (score < 5) return { level: 'medium', message: 'Senha média' };
     return { level: 'strong', message: 'Senha forte' };
@@ -128,45 +127,29 @@ export default function AuthLogin({
 
     const submit = async (e: FormEvent) => {
         e.preventDefault();
-        
+
         // Validação dos campos
         const emailValidation = validateEmail(email);
         const passwordValidation = validatePassword(password);
-        
+
         const errs: typeof errors = {};
         if (!emailValidation.isValid) errs.email = emailValidation.error;
         if (!passwordValidation.isValid) errs.password = passwordValidation.error;
-        
+
         setErrors(errs);
         if (Object.keys(errs).length) return;
 
         try {
             await login(email, password);
             if (remember) localStorage.setItem("erp-auth-email", email);
-            
+
             toast.success("Login realizado com sucesso!");
             setRetryCount(0); // Reset retry count on success
-            
+
             // O redirecionamento será feito automaticamente pelo AuthGuard
         } catch (error) {
-            console.error('🚨 [Login] Caught error:', error);
-            console.error('🚨 [Login] Error type:', typeof error);
-            console.error('🚨 [Login] Error instanceof Error:', error instanceof Error);
-            
-            const appErr = fromUnknown(error);
-            console.log('🚨 [Login] Processed error:', appErr);
-            
-            // Emite toast baseado no tipo de erro
-            console.log('🚨 [Login] Calling emitToastForError...');
-            emitToastForError(toast, appErr);
-            
-            // Se é um erro retryable e não excedeu o limite de tentativas
-            if (appErr.retryable && retryCount < 3) {
-                setRetryCount(prev => prev + 1);
-                setTimeout(() => {
-                    toast.info(`Tentativa ${retryCount + 1} de 3...`);
-                }, 2000);
-            }
+            // Imprime diretamente o objeto cru retornado pelo backend
+            console.error('Auth error (raw):', error.message);
         }
     };
 
@@ -268,3 +251,4 @@ if (typeof process !== "undefined" && process.env.NODE_ENV !== "production") {
     console.assert(validateEmail("").isValid === false, "Email vazio passou");
     console.assert(validatePassword("").isValid === false, "Senha vazia passou");
 }
+

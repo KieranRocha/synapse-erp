@@ -12,59 +12,69 @@ function tryParseJsonTail(message?: string): Partial<BackendErrorShape> | null {
 }
 
 export function fromUnknown(error: unknown): Error & BackendErrorShape & { raw?: unknown } {
-  console.error('🔥 RAW ERROR:', error)
   const isErr = error instanceof Error
   const anyErr = error as any
+
+  // Logs brutos para diagnóstico
+  console.error('🚨 [RAW ERROR FROM BACKEND]:', error)
+  console.error('🚨 [ERROR TYPE]:', typeof error)
+  console.error('🚨 [ERROR instanceof Error]:', isErr)
 
   // Base Error para manter compatibilidade com fluxos existentes
   const normalized: Error & BackendErrorShape & { raw?: unknown } = isErr
     ? (error as Error & BackendErrorShape)
     : Object.assign(new Error(String(error)), {})
 
-  // Extrai campos (se dispon�veis)
+  // Extrai campos diretamente do objeto de erro enriquecido vindo do main
   const direct: Partial<BackendErrorShape> = {
     code: anyErr?.code,
     message: (isErr ? (error as Error).message : anyErr?.message) || undefined,
     details: anyErr?.details,
     traceId: anyErr?.traceId,
-    status: anyErr?.status
+    status: anyErr?.status,
   }
 
-  const causePayload =
-    anyErr?.cause && typeof anyErr.cause === 'object'
-      ? (anyErr.cause as Partial<BackendErrorShape>)
-      : undefined
+  // Algumas builds do Electron anexam o payload original em `cause`
+  const causePayload = (anyErr?.cause && typeof anyErr.cause === 'object') ? anyErr.cause as Partial<BackendErrorShape> : undefined
+
+  // Como fallback, tenta parsear JSON no final da mensagem
   const parsedFromMessage = tryParseJsonTail(direct.message)
 
+  // Escolhe a melhor fonte de dados
   const best: Partial<BackendErrorShape> = {
     ...parsedFromMessage,
     ...causePayload,
-    ...direct
+    ...direct,
   }
 
+  // Atribui campos normalizados ao erro retornado
   if (best.code) (normalized as any).code = best.code
   if (best.message) normalized.message = best.message
   if (best.details !== undefined) (normalized as any).details = best.details
   if (best.traceId) (normalized as any).traceId = best.traceId
   if (best.status !== undefined) (normalized as any).status = best.status
 
+  // Severidade / retryable podem existir no payload vindo do main
   if (anyErr?.severity) (normalized as any).severity = anyErr.severity
   if (anyErr?.retryable !== undefined) (normalized as any).retryable = anyErr.retryable
 
+  // Guarda o erro bruto para debugging adicional
   normalized.raw = error
 
-  // Log estruturado e conciso
-  console.error('?? IPC Error:', {
+  // Log estruturado
+  console.error('🚨 [Login] Processed error:', {
     code: (normalized as any).code,
     message: normalized.message,
     details: (normalized as any).details,
     traceId: (normalized as any).traceId,
     severity: (normalized as any).severity,
     retryable: (normalized as any).retryable,
-    status: (normalized as any).status
+    status: (normalized as any).status,
   })
 
   return normalized
 }
 
-// Fun��es de toast removidas - apenas log no console
+// Funções de toast removidas - apenas log no console
+
+

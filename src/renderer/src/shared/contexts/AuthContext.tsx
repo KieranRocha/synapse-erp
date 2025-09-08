@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { fromUnknown, emitToastForError } from '../errors/adapter';
 import { useToast } from '../hooks/useToast';
 
 export interface User {
@@ -33,7 +32,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isLoading: true,
     isAuthenticated: false,
   });
-  
+
   const toast = useToast();
 
   useEffect(() => {
@@ -43,11 +42,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const checkExistingAuth = async () => {
     try {
       const storedToken = localStorage.getItem('auth-token');
-      
+
       if (storedToken && window.electronAPI?.validate) {
         // Valida o token no backend
         const user = await window.electronAPI.validate(storedToken);
-        
+
         if (user) {
           const formattedUser: User = {
             id: user.id,
@@ -57,20 +56,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
           };
 
           localStorage.setItem('auth-user', JSON.stringify(formattedUser));
-          
+
           setAuthState({
             user: formattedUser,
             isLoading: false,
             isAuthenticated: true,
           });
-          
+
           // Notifica o processo principal que o usuário está logado
           window.electronAPI?.notifyAuthState?.(true);
         } else {
           // Token inválido, limpa storage
           localStorage.removeItem('auth-user');
           localStorage.removeItem('auth-token');
-          
+
           setAuthState({
             user: null,
             isLoading: false,
@@ -85,18 +84,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         });
       }
     } catch (error) {
-      console.error('Error checking auth state:', error);
-      
-      // Trata erro de forma centralizada
-      const appError = fromUnknown(error);
-      if (appError.severity === 'error') {
-        emitToastForError(toast, appError);
-      }
-      
+      console.error('Auth validation error (raw):', error);
+
       // Em caso de erro, limpa storage
       localStorage.removeItem('auth-user');
       localStorage.removeItem('auth-token');
-      
+
       setAuthState({
         user: null,
         isLoading: false,
@@ -108,7 +101,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const login = async (email: string, password: string): Promise<void> => {
     try {
       setAuthState(prev => ({ ...prev, isLoading: true }));
-      
+
       // Verifica se a API de autenticação está disponível
       if (!window.electronAPI?.login) {
         const apiError = new Error('AUTH_API_UNAVAILABLE');
@@ -117,7 +110,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       const result = await window.electronAPI.login(email, password);
-      
+
       const user: User = {
         id: result.user.id,
         name: result.user.nome,
@@ -128,7 +121,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Salva no localStorage
       localStorage.setItem('auth-user', JSON.stringify(user));
       localStorage.setItem('auth-token', result.token);
-      
+
       setAuthState({
         user,
         isLoading: false,
@@ -137,16 +130,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // Notifica o processo principal sobre o login
       window.electronAPI?.notifyAuthState?.(true);
-        
+
     } catch (error) {
       setAuthState(prev => ({ ...prev, isLoading: false }));
-      
-      // Processa e relança o erro para que o componente possa lidar com ele
-      const appError = fromUnknown(error);
-      console.error('Login failed:', appError);
-      
-      // Rejeita com o erro processado para manter compatibilidade
-      throw appError;
+
+      // Loga e relan�a o objeto cru
+      // console.error('Login failed (raw):', error);
+      throw error;
     }
   };
 
@@ -163,7 +153,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       localStorage.removeItem('auth-user');
       localStorage.removeItem('auth-token');
       localStorage.removeItem('erp-auth-email'); // Remove também o email salvo
-      
+
       setAuthState({
         user: null,
         isLoading: false,
@@ -198,3 +188,5 @@ export function useAuth(): AuthContextType {
   }
   return context;
 }
+
+

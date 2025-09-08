@@ -23,7 +23,7 @@ export class AppError extends Error {
   constructor(data: AppErrorData) {
     // Use a message or fallback to code
     super(data.message || data.code)
-    
+
     this.name = 'AppError'
     this.code = data.code
     this.details = data.details
@@ -47,15 +47,15 @@ export class AppError extends Error {
       if (code === ErrorCode.AUTH_SESSION_EXPIRED) return 'info'
       return 'warning'
     }
-    
+
     // Validation errors are warnings
     if (code.startsWith('VALIDATION_')) return 'warning'
-    
+
     // Network/Server errors are errors
     if (code.startsWith('NETWORK_') || code.startsWith('SERVER_') || code.startsWith('DB_')) {
       return 'error'
     }
-    
+
     // Default to error for safety
     return 'error'
   }
@@ -65,12 +65,12 @@ export class AppError extends Error {
     if (code.startsWith('NETWORK_') || code.startsWith('SERVER_') || code.startsWith('DB_')) {
       return true
     }
-    
+
     // Some auth errors are retryable after waiting
     if (code === ErrorCode.AUTH_TOO_MANY_ATTEMPTS || code === ErrorCode.AUTH_ACCOUNT_LOCKED) {
       return true
     }
-    
+
     // Most other errors are not retryable
     return false
   }
@@ -101,7 +101,7 @@ export class AppError extends Error {
     if (code.startsWith('NETWORK_')) {
       return 503
     }
-    
+
     // Default to 500 for unhandled cases
     return 500
   }
@@ -115,7 +115,7 @@ export class AppError extends Error {
       traceId: this.traceId,
       severity: this.severity,
       retryable: this.retryable,
-      status: this.status,
+      status: this.status
     }
   }
 

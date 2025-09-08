@@ -27,7 +27,7 @@ export function registerAuthHandlers() {
         return result
       } catch (error) {
         IPCLogger.logError('auth:login', error as Error, 0)
-
+        
         // Se é um AppError, serializa corretamente para preservar propriedades
         if (error instanceof AppError) {
           const payload = error.toJSON()
@@ -89,13 +89,22 @@ export function registerAuthHandlers() {
       return user
     } catch (error) {
       IPCLogger.logError('auth:profile', error as Error, 0)
+      
+      // Se é um AppError, serializa corretamente para preservar propriedades
       if (error instanceof AppError) {
         const payload = error.toJSON()
-        return { __appError: payload }
+        const msgWithJson = `${payload.message} ${JSON.stringify(payload)}`
+        const enriched = Object.assign(new Error(msgWithJson), {
+          name: 'AppError',
+          ...payload
+        })
+        throw enriched
       }
+      
       throw error
     }
   })
 
   console.log('Auth handlers registered')
 }
+

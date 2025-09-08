@@ -32,13 +32,24 @@ const api = {
   }
 }
 
+// Helper: invoke and unwrap AppError envelopes
+async function invokeWithAppError<T = any>(channel: string, ...args: any[]): Promise<T> {
+  const res: any = await ipcRenderer.invoke(channel, ...args)
+  if (res && typeof res === 'object' && '__appError' in res) {
+    const payload = (res as any).__appError
+    // Lança o objeto cru vindo do backend (sem normalização/enriquecimento)
+    throw payload
+  }
+  return res as T
+}
+
 // Auth API
 const authAPI = {
   notifyAuthState: (isAuthenticated: boolean) => ipcRenderer.invoke('auth:notify-state', isAuthenticated),
-  login: (email: string, password: string) => ipcRenderer.invoke('auth:login', email, password),
-  logout: () => ipcRenderer.invoke('auth:logout'),
-  validate: (token: string) => ipcRenderer.invoke('auth:validate', token),
-  profile: (token: string) => ipcRenderer.invoke('auth:profile', token)
+  login: (email: string, password: string) => invokeWithAppError('auth:login', email, password),
+  logout: () => invokeWithAppError('auth:logout'),
+  validate: (token: string) => invokeWithAppError('auth:validate', token),
+  profile: (token: string) => invokeWithAppError('auth:profile', token)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to
