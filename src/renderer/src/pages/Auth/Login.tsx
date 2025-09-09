@@ -1,10 +1,9 @@
-import { useEffect, useState, ChangeEvent, FormEvent, ReactNode } from "react";
+import { useEffect, useState, ChangeEvent, FormEvent, ReactNode } from 'react';
 import { Mail, Lock, Eye, EyeOff, Loader2Icon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../shared/contexts/AuthContext";
 import logoSrc from "../../assets/logo-dark.svg";
 import { Button } from "../../shared/components/ui/Button";
-import { useToast } from "../../shared/hooks/useToast";
 
 /*****************************
  * Helpers (validators)
@@ -111,13 +110,12 @@ export default function AuthLogin({
 }) {
     const navigate = useNavigate();
     const { login, isLoading } = useAuth();
-    const toast = useToast();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [remember, setRemember] = useState(true);
     const [showPass, setShowPass] = useState(false);
     const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-    const [retryCount, setRetryCount] = useState(0);
+    const [retryCount, setRetryCount] = useState(0); const [submitting, setSubmitting] = useState(false);
 
     // remember me (só mock/localStorage)
     useEffect(() => {
@@ -128,28 +126,53 @@ export default function AuthLogin({
     const submit = async (e: FormEvent) => {
         e.preventDefault();
 
-        // Validação dos campos
+        // Limpa erros anteriores
+        setErrors({});
+
+        // validação ANTES de chamar login()
         const emailValidation = validateEmail(email);
         const passwordValidation = validatePassword(password);
-
         const errs: typeof errors = {};
+
         if (!emailValidation.isValid) errs.email = emailValidation.error;
         if (!passwordValidation.isValid) errs.password = passwordValidation.error;
 
-        setErrors(errs);
-        if (Object.keys(errs).length) return;
+        // Se há erros, mostra e para aqui (SEM chamar login)
+        if (Object.keys(errs).length > 0) {
+            setErrors(errs);
+            return;
+        }
 
         try {
+            setSubmitting(true);
             await login(email, password);
+
             if (remember) localStorage.setItem("erp-auth-email", email);
 
-            toast.success("Login realizado com sucesso!");
-            setRetryCount(0); // Reset retry count on success
+            setRetryCount(0);
+            setSubmitting(false);
+        } catch (error: unknown) {
+            const isBackendError = (
+                e: unknown
+            ): e is { code?: string; message?: string; details?: any } =>
+                !!e && typeof e === "object" && "code" in (e as any);
 
-            // O redirecionamento será feito automaticamente pelo AuthGuard
-        } catch (error) {
-            // Imprime diretamente o objeto cru retornado pelo backend
-            console.error('Auth error (raw):', error.message);
+            if (isBackendError(error)) {
+                switch (error.code) {
+                    case "AUTH_EMAIL_NOT_FOUND":
+                        setErrors(prev => ({ ...prev, email: "E-mail não encontrado" }));
+                        break;
+                    case "AUTH_INVALID_CREDENTIALS":
+                        setErrors(prev => ({ ...prev, password: "Senha incorreta" }));
+                        setRetryCount((r) => r + 1);
+                        break;
+                    default:
+                        break;
+                }
+            } else {
+                console.error("Erro inesperado:", error);
+            }
+            setSubmitting(false);
         }
     };
 
@@ -170,7 +193,7 @@ export default function AuthLogin({
                             label="E-mail"
                             icon={Mail}
                             value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            onChange={(e) => { setEmail(e.target.value); if (errors.email) setErrors(prev => ({ ...prev, email: undefined })); }}
                             error={errors.email}
                             placeholder="voce@empresa.com"
                             autoComplete="email"
@@ -182,7 +205,7 @@ export default function AuthLogin({
                             label="Senha"
                             icon={Lock}
                             value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            onChange={(e) => { setPassword(e.target.value); if (errors.password) setErrors(prev => ({ ...prev, password: undefined })); }}
                             error={errors.password}
                             placeholder="••••••••"
                             autoComplete="current-password"
@@ -212,8 +235,7 @@ export default function AuthLogin({
 
                             <button
                                 type="button"
-                                onClick={() => setMessage("Funcionalidade em desenvolvimento")}
-                                className="text-xs text-text underline cursor-pointer hover:underline"
+                                className='text-xs text-neutral-600 underline cursor-pointer hover:text-neutral-500'
                             >
                                 Esqueci minha senha
                             </button>
@@ -221,11 +243,10 @@ export default function AuthLogin({
 
                         <Button
                             type="submit"
-                            disabled={isLoading || !email || !password}
+                            disabled={submitting || !email || !password}
                             variant={!email || !password ? "danger" : "success"}
-                            className={`w-full py-2.5 rounded-lg  }`}
-                        >
-                            {isLoading ? <Loader2Icon className="animate-spin" /> : "Entrar"}
+                            className={`w-full py-2.5 rounded-lg cursor-pointer disabled:cursor-pointer`}                        >
+                            {submitting ? <Loader2Icon className="animate-spin" /> : "Entrar"}
                         </Button>
                     </form>
 
@@ -251,4 +272,5 @@ if (typeof process !== "undefined" && process.env.NODE_ENV !== "production") {
     console.assert(validateEmail("").isValid === false, "Email vazio passou");
     console.assert(validatePassword("").isValid === false, "Senha vazia passou");
 }
+
 

@@ -100,7 +100,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const login = async (email: string, password: string): Promise<void> => {
     try {
-      setAuthState(prev => ({ ...prev, isLoading: true }));
+      
 
       // Verifica se a API de autenticação está disponível
       if (!window.electronAPI?.login) {
@@ -122,17 +122,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
       localStorage.setItem('auth-user', JSON.stringify(user));
       localStorage.setItem('auth-token', result.token);
 
-      setAuthState({
+      setAuthState(prev => ({
+        ...prev,
         user,
-        isLoading: false,
         isAuthenticated: true,
-      });
+      }));
 
       // Notifica o processo principal sobre o login
       window.electronAPI?.notifyAuthState?.(true);
 
     } catch (error) {
-      setAuthState(prev => ({ ...prev, isLoading: false }));
+      
 
       // Loga e relan�a o objeto cru
       // console.error('Login failed (raw):', error);
@@ -188,5 +188,6 @@ export function useAuth(): AuthContextType {
   }
   return context;
 }
+
 
 

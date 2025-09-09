@@ -31,7 +31,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       "inline-flex items-center justify-center gap-2 rounded-lg font-medium " +
       "transition-all duration-200 focus:outline-none " +
       "disabled:opacity-60 disabled:cursor-not-allowed disabled:pointer-events-none " +
-      "whitespace-nowrap";
+      "whitespace-nowrap ";
 
     const variants: Record<NonNullable<ButtonProps["variant"]>, string> = {
       default: "bg-card border border-border text-fg hover:bg-muted",
