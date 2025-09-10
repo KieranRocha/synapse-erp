@@ -1,0 +1,81 @@
+    };
+
+    // Handle client selection from dropdown
+    const selectClient = (client: DatabaseClient) => {
+        setSelectedClient(client);
+        setSearchTerm(client.nome_fantasia || client.razao_social);
+        setShowDropdown(false);
+
+        // Format address
+        const endereco = [client.logradouro, client.numero].filter(Boolean).join(", ");
+
+        // Fill meta data
+        setMeta({
+            ...meta,
+            cliente: client.nome_fantasia || client.razao_social,
+            cnpj: formatCNPJ(client.cpf_cnpj),
+            clienteEndereco: endereco,
+            clienteBairro: client.bairro || "",
+            clienteCidade: client.cidade || "",
+            clienteUF: client.uf || "",
+            clienteCEP: client.cep ? formatCEP(client.cep) : "",
+            clienteAtividade: "", // Not in database yet
+            clienteAbertura: client.created_at ? formatDateBR(client.created_at) : "",
+        });
+
+        pushToast(`Cliente "${client.nome_fantasia || client.razao_social}" selecionado!`);
+    };
+
+    // Clear selection
+    const clearSelection = () => {
+        setSelectedClient(null);
+        setSearchTerm("");
+        setSearchResults([]);
+        setShowDropdown(false);
+        setMeta({
+            ...meta,
+            cliente: "",
+            cnpj: "",
+            clienteEndereco: "",
+            clienteBairro: "",
+            clienteCidade: "",
+            clienteUF: "",
+            clienteCEP: "",
+            clienteAtividade: "",
+            clienteAbertura: "",
+        });
+    };
+    const handleCNPJChange = (v: string) => {
+        setMeta({ ...meta, cnpj: formatCNPJ(v) });
+        setCnpjMsg(null);
+    };
+
+    const fetchCNPJ = async () => {
+        const raw = onlyDigits(meta.cnpj || "");
+        if (raw.length !== 14) { setCnpjMsg("CNPJ incompleto"); return; }
+
+        try {
+            setLoadingCNPJ(true);
+            setCnpjMsg(null);
+
+            // Search by CNPJ in backend
+            const results = await window.api.clients.search(raw);
+            const cliente = results.find(c => onlyDigits(c.cpf_cnpj) === raw);
+
+            if (cliente) {
+                selectClient(cliente); // Use existing function
+                setCnpjMsg(null);
+            } else {
+                setCnpjMsg("Cliente não encontrado. Cadastre um novo cliente.");
+            }
+        } catch (error) {
+            console.error('Erro ao buscar CNPJ:', error);
+            setCnpjMsg("Erro ao buscar cliente.");
+        } finally {
+            setLoadingCNPJ(false);
+        }
+    };
+
+
+    const novoCliente = () => {
+        navigate('/clientes/novo');

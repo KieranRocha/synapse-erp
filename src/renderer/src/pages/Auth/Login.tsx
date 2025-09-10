@@ -1,12 +1,37 @@
-import { useEffect, useState, ChangeEvent, FormEvent, ReactNode } from "react";
-import { Factory, Mail, Lock, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { useEffect, useState, ChangeEvent, FormEvent, ReactNode } from 'react';
+import { Mail, Lock, Eye, EyeOff, Loader2Icon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../shared/contexts/AuthContext";
+import logoSrc from "../../assets/logo-dark.svg";
+import { Button } from "../../shared/components/ui/Button";
 
 /*****************************
  * Helpers (validators)
  *****************************/
-const validateEmail = (v: string) => /[^@\s]+@[^@\s]+\.[^@\s]+/.test(v);
-const validatePassword = (v: string) => (v || "").trim().length >= 6;
+const validateEmail = (v: string): { isValid: boolean; error?: string } => {
+    const email = (v || "").trim();
+    if (!email) return { isValid: false, error: "E-mail é obrigatório" };
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return { isValid: false, error: "Formato de e-mail inválido" };
+    }
+
+    return { isValid: true };
+};
+
+const validatePassword = (v: string): { isValid: boolean; error?: string } => {
+    const password = (v || "").trim();
+    if (!password) return { isValid: false, error: "Senha é obrigatória" };
+
+    if (password.length < 6) {
+        return { isValid: false, error: "Senha deve ter no mínimo 6 caracteres" };
+    }
+
+    return { isValid: true };
+};
+
+
 
 /*****************************
  * Minimal Input (same visual style do Auth Minimal)
@@ -34,9 +59,9 @@ function Field({
 }) {
     return (
         <label className="block w-full">
-            <span className="text-sm text-gray-700">{label}</span>
+            <span className="text-sm text-text">{label}</span>
             <div
-                className={`mt-1 flex items-center gap-2 rounded-lg border px-3 ${error ? "border-red-400" : "border-gray-300"
+                className={`mt-1 flex items-center gap-2 rounded-lg bg-card px-3  ${error ? " border border-red-400" : "border-gray-300"
                     }`}
             >
                 {Icon ? <Icon size={16} className="text-gray-400" /> : null}
@@ -46,7 +71,7 @@ function Field({
                     onChange={onChange}
                     placeholder={placeholder}
                     autoComplete={autoComplete}
-                    className="w-full py-2 outline-none bg-transparent placeholder-gray-400 text-gray-900"
+                    className="w-full py-2 outline-none bg-transparent placeholder-gray-400 text-fg"
                 />
                 {rightSlot}
             </div>
@@ -61,22 +86,18 @@ function Field({
  * Login Only Screen
  *****************************/
 export default function AuthLogin({
-    brand = "ERP Máquinas",
-    onLogin,
-    onForgot,
+    brand = "ERP Synapse",
 }: {
     brand?: string;
-    onLogin?: (payload: { email: string }) => void;
-    onForgot?: (email?: string) => void;
 }) {
     const navigate = useNavigate();
+    const { login, isLoading } = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [remember, setRemember] = useState(true);
     const [showPass, setShowPass] = useState(false);
     const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-    const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState("");
+    const [retryCount, setRetryCount] = useState(0); const [submitting, setSubmitting] = useState(false);
 
     // remember me (só mock/localStorage)
     useEffect(() => {
@@ -84,61 +105,89 @@ export default function AuthLogin({
         if (saved) setEmail(saved);
     }, []);
 
-    const submit = (e: FormEvent) => {
+    const submit = async (e: FormEvent) => {
         e.preventDefault();
-        const errs: typeof errors = {};
-        if (!validateEmail(email)) errs.email = "E-mail inválido";
-        if (!validatePassword(password)) errs.password = "Mínimo de 6 caracteres";
-        setErrors(errs);
-        if (Object.keys(errs).length) return;
 
-        setLoading(true);
-        setTimeout(() => {
-            setLoading(false);
+        // Limpa erros anteriores
+        setErrors({});
+
+        // validação ANTES de chamar login()
+        const emailValidation = validateEmail(email);
+        const passwordValidation = validatePassword(password);
+        const errs: typeof errors = {};
+
+        if (!emailValidation.isValid) errs.email = emailValidation.error;
+        if (!passwordValidation.isValid) errs.password = passwordValidation.error;
+
+        // Se há erros, mostra e para aqui (SEM chamar login)
+        if (Object.keys(errs).length > 0) {
+            setErrors(errs);
+            return;
+        }
+
+        try {
+            setSubmitting(true);
+            await login(email, password);
+
             if (remember) localStorage.setItem("erp-auth-email", email);
-            onLogin ? onLogin({ email }) : setMessage("Login efetuado (mock)");
-        }, 600);
+
+            setRetryCount(0);
+            setSubmitting(false);
+        } catch (error: unknown) {
+            const isBackendError = (
+                e: unknown
+            ): e is { code?: string; message?: string; details?: any } =>
+                !!e && typeof e === "object" && "code" in (e as any);
+
+            if (isBackendError(error)) {
+                switch (error.code) {
+                    case "AUTH_EMAIL_NOT_FOUND":
+                        setErrors(prev => ({ ...prev, email: "E-mail não encontrado" }));
+                        break;
+                    case "AUTH_INVALID_CREDENTIALS":
+                        setErrors(prev => ({ ...prev, password: "Senha incorreta" }));
+                        setRetryCount((r) => r + 1);
+                        break;
+                    default:
+                        break;
+                }
+            } else {
+                console.error("Erro inesperado:", error);
+            }
+            setSubmitting(false);
+        }
     };
 
     return (
-        <div className="min-h-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen flex items-center bg-bg justify-center py-12 px-4 sm:px-6 lg:px-8">
             <div className="w-full max-w-sm">
-                {/* Back Button */}
-                <button
-                    onClick={() => navigate('/')}
-                    className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-4 transition-colors"
-                >
-                    <ArrowLeft size={16} />
-                    <span className="text-sm">Voltar</span>
-                </button>
 
                 {/* Brand */}
-                <div className="flex items-center gap-2 mb-6">
-                    <Factory size={20} className="text-blue-600" />
-                    <h1 className="text-base font-semibold text-gray-900">{brand}</h1>
+                <div className="flex items-center gap-2 mb-6 justify-center">
+                    <img src={logoSrc} alt="Logo" className="h-20 w-auto" />
                 </div>
 
                 {/* Card */}
-                <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-5">
-                    <h2 className="text-lg font-medium text-gray-900 mb-4">Acesse sua conta</h2>
+                <div className="">
 
                     <form onSubmit={submit} className="space-y-3">
                         <Field
                             label="E-mail"
                             icon={Mail}
                             value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            onChange={(e) => { setEmail(e.target.value); if (errors.email) setErrors(prev => ({ ...prev, email: undefined })); }}
                             error={errors.email}
                             placeholder="voce@empresa.com"
                             autoComplete="email"
                             type="email"
+
                         />
 
                         <Field
                             label="Senha"
                             icon={Lock}
                             value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            onChange={(e) => { setPassword(e.target.value); if (errors.password) setErrors(prev => ({ ...prev, password: undefined })); }}
                             error={errors.password}
                             placeholder="••••••••"
                             autoComplete="current-password"
@@ -168,26 +217,22 @@ export default function AuthLogin({
 
                             <button
                                 type="button"
-                                onClick={() => (onForgot ? onForgot(email) : setMessage("Redirecionar para /auth/forgot (mock)"))}
-                                className="text-sm text-blue-600 hover:underline"
+                                onClick={() => navigate("/auth/forgot-password")}
+                                className='text-xs text-neutral-600 underline cursor-pointer hover:text-neutral-500'
                             >
                                 Esqueci minha senha
                             </button>
                         </div>
 
-                        <button
+                        <Button
                             type="submit"
-                            disabled={loading}
-                            className={`w-full py-2.5 rounded-lg text-white text-sm ${loading ? "bg-gray-400" : "bg-gray-900 hover:bg-black"
-                                }`}
-                        >
-                            {loading ? "Processando..." : "Entrar"}
-                        </button>
+                            disabled={submitting || !email || !password}
+                            variant={!email || !password ? "danger" : "success"}
+                            className={`w-full py-2.5 rounded-lg cursor-pointer disabled:cursor-pointer`}                        >
+                            {submitting ? <Loader2Icon className="animate-spin" /> : "Entrar"}
+                        </Button>
                     </form>
 
-                    {message ? (
-                        <p className="text-xs text-green-700 bg-green-50 border border-green-200 rounded-md px-3 py-2 mt-4">{message}</p>
-                    ) : null}
                 </div>
 
                 {/* Footer */}
@@ -203,8 +248,12 @@ export default function AuthLogin({
  * Dev tests (run only in dev)
  *****************************/
 if (typeof process !== "undefined" && process.env.NODE_ENV !== "production") {
-    console.assert(validateEmail("a@b.com") === true, "Email válido falhou");
-    console.assert(validateEmail("x") === false, "Email inválido passou");
-    console.assert(validatePassword("123456") === true, "Senha mínima falhou");
-    console.assert(validatePassword("123") === false, "Senha curta passou");
+    console.assert(validateEmail("a@b.com").isValid === true, "Email válido falhou");
+    console.assert(validateEmail("x").isValid === false, "Email inválido passou");
+    console.assert(validatePassword("123456").isValid === true, "Senha mínima falhou");
+    console.assert(validatePassword("123").isValid === false, "Senha curta passou");
+    console.assert(validateEmail("").isValid === false, "Email vazio passou");
+    console.assert(validatePassword("").isValid === false, "Senha vazia passou");
 }
+
+

@@ -1,6 +1,5 @@
 @import 'tailwindcss';
-/* src/styles/scrollbar.css */
-
+@import './theme.css';
 @layer utilities {
   /* esconder totalmente (caso use em outro lugar) */
   .no-scrollbar::-webkit-scrollbar {
@@ -58,15 +57,4 @@
   &::-webkit-scrollbar-thumb:hover {
     background: #1fd643;
   }
-}
-@layer base {
-  :root {
-    --primary-dark-bg: #0a0a0a;
-    --primary-dark-card: #161616;
-    --teste: #ffffff;
-  }
-}
-@theme {
-  --color-dark-bg: #0a0a0a;
-  --color-dark-card: #161616;
 }

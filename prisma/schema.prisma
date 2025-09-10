@@ -1,0 +1,289 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Authentication and Multi-tenancy
+model Tenant {
+  id           String   @id @default(uuid()) @db.Uuid
+  razaoSocial  String   @map("razao_social") @db.VarChar(255)
+  nomeFantasia String?  @map("nome_fantasia") @db.VarChar(255)
+  cnpj         String?  @unique @db.VarChar(18)
+  ie           String?  @db.VarChar(20)
+  im           String?  @db.VarChar(20)
+  email        String?  @db.VarChar(255)
+  telefone     String?  @db.VarChar(20)
+  endereco     String?  @db.VarChar(255)
+  numero       String?  @db.VarChar(20)
+  complemento  String?  @db.VarChar(100)
+  bairro       String?  @db.VarChar(100)
+  cidade       String?  @db.VarChar(100)
+  municipioIbge String? @map("municipio_ibge") @db.VarChar(7)
+  uf           String?  @db.Char(2)
+  cep          String?  @db.VarChar(9)
+  timezone     String   @default("America/Sao_Paulo") @db.VarChar(64)
+  moeda        String   @default("BRL") @db.Char(3)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  usuarios Usuario[]
+  clients Client[]
+  budgets Budget[]
+  budgetItems BudgetItem[]
+  budgetFinancials BudgetFinancial[]
+
+  @@map("tenants")
+}
+
+model Usuario {
+  id          String    @id @default(uuid()) @db.Uuid
+  tenantId    String    @map("tenant_id") @db.Uuid
+  tenant      Tenant    @relation(fields: [tenantId], references: [id])
+  email       String    @db.VarChar(255)
+  senhaHash   String    @map("senha_hash") @db.VarChar(255)
+  nome        String    @db.VarChar(255)
+  cargo       String?   @db.VarChar(100)
+  permissoes  Json      @default("{}")
+  ativo       Boolean   @default(true)
+  ultimoLogin DateTime? @map("ultimo_login") @db.Timestamptz(6)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  passwordResets PasswordReset[]
+
+  @@unique([tenantId, email])
+  @@unique([tenantId, id])
+  @@map("usuarios")
+}
+
+model PasswordReset {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  user      Usuario  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique @db.VarChar(255)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([token, expiresAt, used])
+  @@map("password_resets")
+}
+
+// Enums for budgets
+enum BudgetStatus {
+  DRAFT
+  SENT
+  APPROVED
+  REJECTED
+  ARCHIVED
+}
+
+enum RegimeEnum {
+  SN
+  LP
+  LR
+}
+
+enum TipoOperacaoEnum {
+  MERCADORIA
+  SERVICO
+}
+
+enum PricingMethodEnum {
+  MARKUP
+  MARGIN
+}
+
+model Client {
+  id                Int      @id @default(autoincrement())
+  tenantId          String   @map("tenant_id") @db.Uuid
+  tenant            Tenant   @relation(fields: [tenantId], references: [id])
+  
+  tipo_pessoa       String?  @default("PJ")
+  razao_social      String   @db.VarChar(255)
+  nome_fantasia     String?  @default("") @db.VarChar(255)
+  cpf_cnpj          String   @db.VarChar(14)
+  indicador_ie      String?  @default("Contribuinte")
+  ie                String?  @default("") @db.VarChar(255)
+  im                String?  @default("") @db.VarChar(255)
+  suframa           String?  @default("") @db.VarChar(255)
+  regime_trib       String?  @default("Simples Nacional")
+  cep               String?  @default("") @db.VarChar(8)
+  logradouro        String?  @default("") @db.VarChar(255)
+  numero            String?  @default("") @db.VarChar(255)
+  complemento       String?  @default("") @db.VarChar(255)
+  bairro            String?  @default("") @db.VarChar(255)
+  cidade            String?  @default("") @db.VarChar(255)
+  uf                String?  @default("") @db.VarChar(2)
+  pais              String?  @default("Brasil") @db.VarChar(255)
+  email             String?  @default("") @db.VarChar(255)
+  telefone          String?  @default("") @db.VarChar(255)
+  responsavel       String?  @default("") @db.VarChar(255)
+  cargo             String?  @default("") @db.VarChar(255)
+  cond_pgto_padrao  String?  @default("") @db.VarChar(255)
+  limite_credito    Decimal? @default(0) @db.Decimal(10, 2)
+  vendedor_padrao   String?  @default("") @db.VarChar(255)
+  transporte_padrao String?  @default("CIF")
+  observacoes       String?  @default("")
+  created_at        DateTime @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@unique([tenantId, cpf_cnpj])
+  @@index([tenantId, email], map: "clients_tenant_email_index")
+  @@index([tenantId, razao_social], map: "clients_tenant_razao_social_index")
+  @@map("clients")
+  budgets           Budget[]
+}
+
+model knex_migrations {
+  id             Int       @id @default(autoincrement())
+  name           String?   @db.VarChar(255)
+  batch          Int?
+  migration_time DateTime? @db.Timestamptz(6)
+}
+
+model knex_migrations_lock {
+  index     Int  @id @default(autoincrement())
+  is_locked Int?
+}
+
+// Budgets (Orçamentos)
+model Budget {
+  id                     Int                 @id @default(autoincrement())
+  tenantId               String              @map("tenant_id") @db.Uuid
+  tenant                 Tenant              @relation(fields: [tenantId], references: [id])
+  
+  clientId               Int?
+  client                 Client?             @relation(fields: [clientId], references: [id])
+
+  numero                 String              @db.VarChar(32)
+  name                   String              @db.VarChar(255)
+  description            String?
+  responsavel            String?             @db.VarChar(255)
+  startDate              DateTime?           @db.Timestamptz(6)
+  deliveryDate           DateTime?           @db.Timestamptz(6)
+  status                 BudgetStatus        @default(DRAFT)
+
+  // Pricing snapshot
+  precoSugerido          Decimal?            @db.Decimal(14, 2)
+  precoAprovado          Decimal?            @db.Decimal(14, 2)
+  pricingMethod          PricingMethodEnum?
+  markupPct              Decimal?            @db.Decimal(7, 4)
+  marginPct              Decimal?            @db.Decimal(7, 4)
+  considerICMSasCost     Boolean             @default(false)
+  considerPISCOFINSasCost Boolean            @default(false)
+  considerIPIasCost      Boolean             @default(false)
+  considerISSasCost      Boolean             @default(false)
+
+  // Relations
+  items                  BudgetItem[]
+  financial              BudgetFinancial?
+
+  created_at             DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime            @updatedAt @db.Timestamptz(6)
+
+  @@index([tenantId, status, created_at], map: "budgets_tenant_status_created_idx")
+  @@index([tenantId, clientId], map: "budgets_tenant_client_idx")
+  @@map("budgets")
+}
+
+model BudgetItem {
+  id         Int      @id @default(autoincrement())
+  tenantId   String   @map("tenant_id") @db.Uuid
+  tenant     Tenant   @relation(fields: [tenantId], references: [id])
+  
+  budgetId   Int
+  budget     Budget   @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+
+  name       String   @db.VarChar(255)
+  unit       String   @db.VarChar(32)
+  quantity   Decimal  @db.Decimal(14, 4)
+  unitPrice  Decimal  @db.Decimal(14, 4)
+  category   String   @db.VarChar(64)
+  sortIndex  Int      @default(0)
+
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @updatedAt @db.Timestamptz(6)
+
+  @@index([tenantId, budgetId], map: "budget_items_tenant_budget_idx")
+  @@index([tenantId, category], map: "budget_items_tenant_category_idx")
+  @@map("budget_items")
+}
+
+model BudgetFinancial {
+  id                       Int               @id @default(autoincrement())
+  tenantId                 String            @map("tenant_id") @db.Uuid
+  tenant                   Tenant            @relation(fields: [tenantId], references: [id])
+  
+  budgetId                 Int               @unique
+  budget                   Budget            @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+
+  regime                   RegimeEnum
+  tipoOperacao             TipoOperacaoEnum
+  cfop                     String?            @db.VarChar(32)
+  naturezaOperacao         String?            @db.VarChar(255)
+
+  // mercadorias
+  ncm                      String?            @db.VarChar(32)
+  cest                     String?            @db.VarChar(16)
+  // servicos
+  nbs                      String?            @db.VarChar(32)
+
+  precoVenda               Decimal?           @db.Decimal(14, 2)
+
+  // comuns
+  descontoPct              Decimal            @default(0) @db.Decimal(7, 4)
+  descontoValor            Decimal            @default(0) @db.Decimal(14, 2)
+  frete                    Decimal            @default(0) @db.Decimal(14, 2)
+  seguro                   Decimal            @default(0) @db.Decimal(14, 2)
+  outrosCustos             Decimal            @default(0) @db.Decimal(14, 2)
+
+  compoeBaseICMS           Boolean            @default(false)
+  compoeBasePisCofins      Boolean            @default(false)
+  compoeBaseIPI            Boolean            @default(false)
+
+  // ICMS / ICMS-ST / FCP / DIFAL
+  cst                      String?            @db.VarChar(8)
+  csosn                    String?            @db.VarChar(8)
+  origemMercadoria         String?            @db.VarChar(8)
+  icmsAliq                 Decimal?           @db.Decimal(7, 4)
+  icmsRedBasePct           Decimal?           @db.Decimal(7, 4)
+  icmsStMva                Decimal?           @db.Decimal(7, 4)
+  icmsStAliq               Decimal?           @db.Decimal(7, 4)
+  fcpAliq                  Decimal?           @db.Decimal(7, 4)
+  fcpStAliq                Decimal?           @db.Decimal(7, 4)
+  difalAliqInter           Decimal?           @db.Decimal(7, 4)
+  difalAliqInterna         Decimal?           @db.Decimal(7, 4)
+  difalPartilhaDestinoPct  Decimal?           @db.Decimal(7, 4)
+
+  // IPI
+  ipiCst                   String?            @db.VarChar(8)
+  ipiAliq                  Decimal?           @db.Decimal(7, 4)
+
+  // PIS/COFINS
+  pisCst                   String?            @db.VarChar(8)
+  pisAliq                  Decimal?           @db.Decimal(7, 4)
+  cofinsCst                String?            @db.VarChar(8)
+  cofinsAliq               Decimal?           @db.Decimal(7, 4)
+
+  // ISS e retenções (serviço)
+  municipioIncidencia      String?            @db.VarChar(255)
+  issAliq                  Decimal?           @db.Decimal(7, 4)
+  issRetido                Boolean?           @default(false)
+  irrfAliq                 Decimal?           @db.Decimal(7, 4)
+  inssAliq                 Decimal?           @db.Decimal(7, 4)
+  csllAliq                 Decimal?           @db.Decimal(7, 4)
+  pisRetAliq               Decimal?           @db.Decimal(7, 4)
+  cofinsRetAliq            Decimal?           @db.Decimal(7, 4)
+
+  created_at               DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime           @updatedAt @db.Timestamptz(6)
+
+  @@map("budget_financials")
+}
