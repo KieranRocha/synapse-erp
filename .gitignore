@@ -4,5 +4,7 @@ out
 .DS_Store
 .eslintcache
 *.log*
-
+.env
 /src/generated/prisma
+.env.example
+.env

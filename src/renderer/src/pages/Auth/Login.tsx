@@ -31,25 +31,7 @@ const validatePassword = (v: string): { isValid: boolean; error?: string } => {
     return { isValid: true };
 };
 
-const checkPasswordStrength = (password: string): { level: 'weak' | 'medium' | 'strong'; message: string } => {
-    const hasLower = /[a-z]/.test(password);
-    const hasUpper = /[A-Z]/.test(password);
-    const hasNumber = /\d/.test(password);
-    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    const length = password.length;
 
-    let score = 0;
-    if (hasLower) score++;
-    if (hasUpper) score++;
-    if (hasNumber) score++;
-    if (hasSpecial) score++;
-    if (length >= 8) score++;
-    if (length >= 12) score++;
-
-    if (score < 3) return { level: 'weak', message: 'Senha fraca' };
-    if (score < 5) return { level: 'medium', message: 'Senha média' };
-    return { level: 'strong', message: 'Senha forte' };
-};
 
 /*****************************
  * Minimal Input (same visual style do Auth Minimal)
@@ -104,7 +86,7 @@ function Field({
  * Login Only Screen
  *****************************/
 export default function AuthLogin({
-    brand = "ERP Máquinas",
+    brand = "ERP Synapse",
 }: {
     brand?: string;
 }) {
@@ -235,6 +217,7 @@ export default function AuthLogin({
 
                             <button
                                 type="button"
+                                onClick={() => navigate("/auth/forgot-password")}
                                 className='text-xs text-neutral-600 underline cursor-pointer hover:text-neutral-500'
                             >
                                 Esqueci minha senha

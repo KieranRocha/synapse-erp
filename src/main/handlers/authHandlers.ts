@@ -97,5 +97,77 @@ export function registerAuthHandlers() {
     }
   })
 
+  // Request password reset
+  ipcMain.handle('auth:requestPasswordReset', async (_event: IpcMainInvokeEvent, email: string) => {
+    try {
+      IPCLogger.logRequest('auth:requestPasswordReset', [email])
+
+      if (!email) {
+        throw AppError.validationRequired('E-mail')
+      }
+
+      const result = await authService.requestPasswordReset(email)
+
+      IPCLogger.logResponse('auth:requestPasswordReset', { userId: result.user.id }, 0)
+      return result
+    } catch (error) {
+      IPCLogger.logError('auth:requestPasswordReset', error as Error, 0)
+
+      if (error instanceof AppError) {
+        const payload = error.toJSON()
+        return { __appError: payload }
+      }
+
+      throw error
+    }
+  })
+
+  // Validate password reset token
+  ipcMain.handle('auth:validatePasswordResetToken', async (_event: IpcMainInvokeEvent, token: string) => {
+    try {
+      if (!token) {
+        return null
+      }
+
+      const user = await authService.validatePasswordResetToken(token)
+      
+      if (user) {
+        IPCLogger.logResponse('auth:validatePasswordResetToken', { userId: user.id }, 0)
+      } else {
+        IPCLogger.logResponse('auth:validatePasswordResetToken', null, 0)
+      }
+
+      return user
+    } catch (error) {
+      IPCLogger.logError('auth:validatePasswordResetToken', error as Error, 0)
+      return null
+    }
+  })
+
+  // Reset password with token
+  ipcMain.handle('auth:resetPassword', async (_event: IpcMainInvokeEvent, token: string, newPassword: string) => {
+    try {
+      IPCLogger.logRequest('auth:resetPassword', [token])
+
+      if (!token || !newPassword) {
+        throw AppError.validationRequired('Token e nova senha')
+      }
+
+      const success = await authService.resetPassword(token, newPassword)
+
+      IPCLogger.logResponse('auth:resetPassword', { success }, 0)
+      return { success }
+    } catch (error) {
+      IPCLogger.logError('auth:resetPassword', error as Error, 0)
+
+      if (error instanceof AppError) {
+        const payload = error.toJSON()
+        return { __appError: payload }
+      }
+
+      throw error
+    }
+  })
+
   console.log('Auth handlers registered')
 }

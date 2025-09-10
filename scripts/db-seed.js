@@ -36,16 +36,16 @@ async function main() {
       where: { 
         tenantId_email: {
           tenantId: tenant.id,
-          email: 'admin@erpmaquinas.com'
+          email: 'kieran.rocha@gmail.com'
         }
       },
       update: {},
       create: {
         tenantId: tenant.id,
-        email: 'admin@erpmaquinas.com',
+        email: 'kieran.rocha@gmail.com',
         senhaHash: passwordHash,
-        nome: 'Administrador',
-        cargo: 'admin',
+        nome: 'Kieran Rocha',
+        cargo: 'Administrador',
         permissoes: { 
           admin: true, 
           users: ['create', 'read', 'update', 'delete'],
@@ -87,6 +87,7 @@ async function main() {
     if (!client) {
       client = await prisma.client.create({
         data: {
+          tenantId: tenant.id,
           tipo_pessoa: 'PJ',
           razao_social: 'Cliente Exemplo Ltda',
           nome_fantasia: 'Cliente Exemplo',
@@ -117,12 +118,13 @@ async function main() {
         marginPct: 0.25,
         items: {
           create: [
-            { name: 'Bomba', unit: 'un', quantity: 2, unitPrice: 5000, category: 'Máquinas & Equipamentos', sortIndex: 0 },
-            { name: 'Cabine', unit: 'un', quantity: 1, unitPrice: 30000, category: 'Máquinas & Equipamentos', sortIndex: 1 },
+            { tenantId: tenant.id, name: 'Bomba', unit: 'un', quantity: 2, unitPrice: 5000, category: 'Máquinas & Equipamentos', sortIndex: 0 },
+            { tenantId: tenant.id, name: 'Cabine', unit: 'un', quantity: 1, unitPrice: 30000, category: 'Máquinas & Equipamentos', sortIndex: 1 },
           ]
         },
         financial: {
           create: {
+            tenantId: tenant.id,
             regime: 'SN',
             tipoOperacao: 'MERCADORIA',
             descontoPct: 0,
@@ -148,8 +150,8 @@ async function main() {
         status: 'APPROVED',
         precoSugerido: 80000,
         precoAprovado: 82000,
-        items: { create: [ { name: 'Duto', unit: 'm', quantity: 120, unitPrice: 150, category: 'Materiais / Matéria-prima', sortIndex: 0 } ] },
-        financial: { create: { regime: 'LP', tipoOperacao: 'SERVICO', descontoPct: 5, descontoValor: 0, frete: 2000, seguro: 0, outrosCustos: 0, compoeBaseICMS: false, compoeBasePisCofins: false, compoeBaseIPI: false } }
+        items: { create: [ { tenantId: tenant.id, name: 'Duto', unit: 'm', quantity: 120, unitPrice: 150, category: 'Materiais / Matéria-prima', sortIndex: 0 } ] },
+        financial: { create: { tenantId: tenant.id, regime: 'LP', tipoOperacao: 'SERVICO', descontoPct: 5, descontoValor: 0, frete: 2000, seguro: 0, outrosCustos: 0, compoeBaseICMS: false, compoeBasePisCofins: false, compoeBaseIPI: false } }
       }
     })
 
@@ -157,8 +159,9 @@ async function main() {
 
     console.log('\n=== CREDENCIAIS DE TESTE ===')
     console.log('Administrador:')
-    console.log('  Email: admin@erpmaquinas.com')
+    console.log('  Email: kieran.rocha@gmail.com')
     console.log('  Senha: 123456')
+    console.log('  Nome: Kieran Rocha')
     console.log('')
     console.log('Usuário Padrão:')
     console.log('  Email: user@erpmaquinas.com')

@@ -27,6 +27,9 @@ declare global {
       logout: () => Promise<{ success: boolean }>
       validate: (token: string) => Promise<any | null>
       profile: (token: string) => Promise<any | null>
+      requestPasswordReset: (email: string) => Promise<{ token: string; user: any }>
+      validatePasswordResetToken: (token: string) => Promise<any | null>
+      resetPassword: (token: string, newPassword: string) => Promise<{ success: boolean }>
     }
   }
 }

@@ -49,7 +49,10 @@ const authAPI = {
   login: (email: string, password: string) => invokeWithAppError('auth:login', email, password),
   logout: () => invokeWithAppError('auth:logout'),
   validate: (token: string) => invokeWithAppError('auth:validate', token),
-  profile: (token: string) => invokeWithAppError('auth:profile', token)
+  profile: (token: string) => invokeWithAppError('auth:profile', token),
+  requestPasswordReset: (email: string) => invokeWithAppError('auth:requestPasswordReset', email),
+  validatePasswordResetToken: (token: string) => invokeWithAppError('auth:validatePasswordResetToken', token),
+  resetPassword: (token: string, newPassword: string) => invokeWithAppError('auth:resetPassword', token, newPassword)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

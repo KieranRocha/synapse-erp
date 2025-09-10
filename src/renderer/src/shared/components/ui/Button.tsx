@@ -40,7 +40,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       outline: "border border-border text-fg hover:bg-muted",
       ghost: "text-fg hover:bg-muted",
       danger: "border-red-600 border text-red-500 hover:bg-card/90",
-      success: "bg-transparent border border-emerald-600 text-emerald-500 hover:bg-card/90",
+      success: "bg-transparent border border-green-600 text-green-500 hover:bg-card/90",
       warning: "bg-yellow-500 text-white hover:bg-yellow-600",
       info: "bg-blue-500 text-white hover:bg-blue-600",
     };

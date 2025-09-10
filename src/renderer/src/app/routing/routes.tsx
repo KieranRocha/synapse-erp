@@ -1,6 +1,8 @@
 // routes.tsx
 import { RouteObject } from "react-router-dom";
 import AuthLogin from "../../pages/Auth/Login";
+import ForgotPassword from "../../pages/Auth/ForgotPassword";
+import ResetPassword from "../../pages/Auth/ResetPassword";
 import App from "../layout/App";
 import BeautifulPage from "../../pages/BeautifulPage/BeautifulPage"; // placeholder estiloso
 import { AuthGuard, GuestGuard } from "../../shared/components/auth/AuthGuard";
@@ -26,6 +28,22 @@ export const routes: RouteObject[] = [
         element: (
             <GuestGuard>
                 <AuthLogin />
+            </GuestGuard>
+        ) 
+    },
+    { 
+        path: "/auth/forgot-password", 
+        element: (
+            <GuestGuard>
+                <ForgotPassword />
+            </GuestGuard>
+        ) 
+    },
+    { 
+        path: "/auth/reset-password", 
+        element: (
+            <GuestGuard>
+                <ResetPassword />
             </GuestGuard>
         ) 
     },

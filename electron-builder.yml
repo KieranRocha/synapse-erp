@@ -1,5 +1,10 @@
 appId: com.electron.app
 productName: synapse-code
+protocols:
+  - name: Synapse App Links
+    role: Viewer
+    schemes:
+      - synapseapp
 directories:
   buildResources: build
 files:
