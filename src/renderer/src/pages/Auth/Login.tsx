@@ -170,7 +170,7 @@ export default function AuthLogin({
                 {/* Card */}
                 <div className="">
 
-                    <form onSubmit={submit} className="space-y-3">
+                    <form onSubmit={submit} className="space-y-6">
                         <Field
                             label="E-mail"
                             icon={Mail}
@@ -221,6 +221,17 @@ export default function AuthLogin({
                                 className='text-xs text-neutral-600 underline cursor-pointer hover:text-neutral-500'
                             >
                                 Esqueci minha senha
+                            </button>
+                        </div>
+
+                        {/* Botão de Onboarding */}
+                        <div className="text-center">
+                            <button
+                                type="button"
+                                onClick={() => navigate("/onboarding")}
+                                className="text-sm text-blue-600 underline cursor-pointer hover:text-blue-700"
+                            >
+                                Configurar Nova Empresa
                             </button>
                         </div>
 

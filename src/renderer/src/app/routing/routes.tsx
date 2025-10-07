@@ -15,10 +15,13 @@ import {
   OrcamentoEditPage 
 } from '../../modules/orcamentos/pages'
 
-import { 
-  ClientesListPage, 
-  ClienteCreatePage 
+import {
+  ClientesListPage,
+  ClienteCreatePage,
+  ClienteEditPage
 } from '../../modules/clientes/pages'
+
+import { OnboardingWizard } from '../../modules/onboarding/pages/OnboardingWizard'
 
 import DatabaseTestPage from "../../pages/Debug/DatabaseTestPage";
 export const routes: RouteObject[] = [
@@ -44,6 +47,14 @@ export const routes: RouteObject[] = [
         element: (
             <GuestGuard>
                 <ResetPassword />
+            </GuestGuard>
+        ) 
+    },
+    { 
+        path: "/onboarding", 
+        element: (
+            <GuestGuard>
+                <OnboardingWizard />
             </GuestGuard>
         ) 
     },
@@ -73,6 +84,7 @@ export const routes: RouteObject[] = [
             { path: "vendas/orcamentos/:id/editar", element: <OrcamentoEditPage /> },
             { path: "clientes", element: <ClientesListPage /> },
             { path: "clientes/novo", element: <ClienteCreatePage /> },
+            { path: "clientes/:id/editar", element: <ClienteEditPage /> },
             { path: "projetos", element: <BeautifulPage title="Projetos" subtitle="Planejamento, produção, instalação e entrega." /> },
             { path: "estoque", element: <BeautifulPage title="BOM & Estoque" subtitle="Materiais, itens e estrutura de produto." /> },
             { path: "compras", element: <BeautifulPage title="Compras" subtitle="Requisições, cotações e pedidos de compra." /> },

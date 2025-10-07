@@ -15,6 +15,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { KpiCards } from "../components/cards/KpiCards";
 
 /** ================================================================
  *  TYPES - Database Client Model
@@ -125,6 +126,8 @@ export default function ClientesPage() {
   const [error, setError] = useState<string | null>(null);
 
   const onNew = () => navigate("/clientes/novo");
+  const onEdit = (clienteId: number) => navigate(`/clientes/${clienteId}/editar`);
+  const onView = (clienteId: number) => console.log("Ver cliente", clienteId);
   const onExport = () => console.log("Exportar (mock)");
   const onEmail = () => console.log("Enviar e-mail (mock)");
 
@@ -172,17 +175,18 @@ export default function ClientesPage() {
     const ativos = clients.filter((c) => c.status === "ativo").length;
     const valor = clients.reduce((s, c) => s + c.valorTotal, 0);
     const ticket = total ? valor / total : 0;
-    const recentes30 = clients.filter(
-      (c) => (Date.now() - new Date(c.ultimoPedido).getTime()) / 86400000 <= 30
-    ).length;
+    const limiteTotal = clients.reduce((s, c) => s + (c.limiteCredito || 0), 0);
+
+    // Inadimplência mockada (poderia vir do backend)
+    const inadimplencia = 2.3;
 
     return {
-      total,
-      ativos,
-      ticket,
-      valor,
-      recentes30,
-      ativacaoPct: total ? (ativos / total) * 100 : 0,
+      totalClientes: total,
+      clientesAtivos: ativos,
+      limiteTotal,
+      faturamentoMes: valor * 0.15, // Mock: 15% do valor total
+      ticketMedio: ticket,
+      inadimplencia,
     };
   }, [clients]);
 
@@ -257,14 +261,7 @@ export default function ClientesPage() {
         </div>
 
         {/* KPIs no padrão */}
-        <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-          <KpiCard title="Total" value={kpis.total} />
-          <KpiCard title="Ativos" value={kpis.ativos} />
-          <KpiCard title="Ativação" value={`${kpis.ativacaoPct.toFixed(1)}%`} />
-          <KpiCard title="Valor Total" value={currency(kpis.valor)} />
-          <KpiCard title="Ticket Médio" value={currency(kpis.ticket)} />
-          <KpiCard title="Ativos (30d)" value={kpis.recentes30} />
-        </section>
+        <KpiCards kpis={kpis} />
 
         {/* FiltersBar no padrão */}
         <section className="rounded-2xl border border-border bg-card/70 backdrop-blur p-3 md:p-4 mb-6">
@@ -371,10 +368,10 @@ export default function ClientesPage() {
                     <p className="text-sm text-muted-foreground">{c.cnpj}</p>
                   </div>
                   <div className="flex items-center gap-1">
-                    <IconBtn title="Ver">
+                    <IconBtn title="Ver" onClick={() => onView(c.id)}>
                       <Eye size={16} className="text-muted-foreground" />
                     </IconBtn>
-                    <IconBtn title="Editar">
+                    <IconBtn title="Editar" onClick={() => onEdit(c.id)}>
                       <Edit size={16} className="text-muted-foreground" />
                     </IconBtn>
                     <IconBtn title="Mais">
@@ -468,8 +465,8 @@ export default function ClientesPage() {
                       <Td className="text-muted-foreground">{dateBR(c.ultimoPedido)}</Td>
                       <Td>
                         <div className="flex items-center justify-center gap-1">
-                          <IconBtn title="Visualizar"><Eye size={16} className="text-muted-foreground" /></IconBtn>
-                          <IconBtn title="Editar"><Edit size={16} className="text-muted-foreground" /></IconBtn>
+                          <IconBtn title="Visualizar" onClick={() => onView(c.id)}><Eye size={16} className="text-muted-foreground" /></IconBtn>
+                          <IconBtn title="Editar" onClick={() => onEdit(c.id)}><Edit size={16} className="text-muted-foreground" /></IconBtn>
                           <IconBtn title="Mais opções"><MoreVertical size={16} className="text-muted-foreground" /></IconBtn>
                         </div>
                       </Td>
@@ -547,18 +544,9 @@ export default function ClientesPage() {
 /** ================================================================
  *  ÁTOMOS (no teu padrão de tokens)
  *  ================================================================ */
-function KpiCard({ title, value }: { title: string; value: string | number }) {
+function IconBtn({ title, children, onClick }: { title: string; children: React.ReactNode; onClick?: () => void }) {
   return (
-    <div className="rounded-2xl border border-border bg-card shadow-card backdrop-blur p-4">
-      <p className="text-xs text-muted-foreground mb-1">{title}</p>
-      <div className="text-xl font-semibold text-fg">{value}</div>
-    </div>
-  );
-}
-
-function IconBtn({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <button title={title} className="p-2 rounded-xl hover:bg-muted/50 transition">
+    <button title={title} onClick={onClick} className="p-2 rounded-xl hover:bg-muted/50 transition">
       {children}
     </button>
   );

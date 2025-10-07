@@ -29,6 +29,24 @@ const api = {
     create: (payload: any) => ipcRenderer.invoke('budgets:create', getAuthToken(), payload),
     update: (id: number, payload: any) => ipcRenderer.invoke('budgets:update', getAuthToken(), id, payload),
     delete: (id: number) => ipcRenderer.invoke('budgets:delete', getAuthToken(), id)
+  },
+  sellers: {
+    getAll: (token: string) => ipcRenderer.invoke('sellers:getAll', token),
+    getActive: (token: string) => ipcRenderer.invoke('sellers:getActive', token),
+    getById: (token: string, id: number) => ipcRenderer.invoke('sellers:getById', token, id),
+    create: (token: string, sellerData: any) => ipcRenderer.invoke('sellers:create', token, sellerData),
+    update: (token: string, id: number, sellerData: any) => ipcRenderer.invoke('sellers:update', token, id, sellerData),
+    delete: (token: string, id: number) => ipcRenderer.invoke('sellers:delete', token, id),
+    deactivate: (token: string, id: number) => ipcRenderer.invoke('sellers:deactivate', token, id),
+    activate: (token: string, id: number) => ipcRenderer.invoke('sellers:activate', token, id)
+  },
+  clientContacts: {
+    getAll: (token: string, clientId: number) => ipcRenderer.invoke('clientContacts:getAll', token, clientId),
+    getById: (token: string, id: number) => ipcRenderer.invoke('clientContacts:getById', token, id),
+    create: (token: string, clientId: number, contactData: any) => ipcRenderer.invoke('clientContacts:create', token, clientId, contactData),
+    update: (token: string, clientId: number, id: number, contactData: any) => ipcRenderer.invoke('clientContacts:update', token, clientId, id, contactData),
+    delete: (token: string, clientId: number, id: number) => ipcRenderer.invoke('clientContacts:delete', token, clientId, id),
+    setPrimary: (token: string, clientId: number, id: number) => ipcRenderer.invoke('clientContacts:setPrimary', token, clientId, id)
   }
 }
 
@@ -52,7 +70,8 @@ const authAPI = {
   profile: (token: string) => invokeWithAppError('auth:profile', token),
   requestPasswordReset: (email: string) => invokeWithAppError('auth:requestPasswordReset', email),
   validatePasswordResetToken: (token: string) => invokeWithAppError('auth:validatePasswordResetToken', token),
-  resetPassword: (token: string, newPassword: string) => invokeWithAppError('auth:resetPassword', token, newPassword)
+  resetPassword: (token: string, newPassword: string) => invokeWithAppError('auth:resetPassword', token, newPassword),
+  invoke: (channel: string, ...args: any[]) => invokeWithAppError(channel, ...args)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to
