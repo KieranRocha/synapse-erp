@@ -22,7 +22,7 @@ export function Section({
   bodyClassName = ''
 }: SectionProps) {
   return (
-    <section className={`bg-bg  rounded-2xl ${className}`}>
+    <section className={`bg-bg border border-border rounded-2xl ${className}`}>
       <header className={`px-4 md:px-5 py-3 border-b border-border flex items-center gap-2 ${headerClassName}`}>
         {icon}
         <div className="flex-1">

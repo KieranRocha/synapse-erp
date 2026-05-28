@@ -9,7 +9,8 @@ import {
   IdentificacaoSection,
   EnderecoSection,
   FiscalFinanceiroSection,
-  ChecklistSidebar
+  ChecklistSidebar,
+  AnexosSection
 } from '../components/forms/sections';
 import { VendedorSection } from '../components/forms/sections/VendedorSection';
 import { ContatosClienteSection } from '../components/forms/sections/ContatosClienteSection';
@@ -210,7 +211,8 @@ function NovoClienteForm() {
         setValue={setValue}
         register={register}
       />
-
+      <AnexosSection
+      />
       <div className="bg-bg border border-border rounded-2xl p-4 flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
         <div className="text-sm opacity-80 flex items-center gap-2">
           <CheckCircle2 size={18} className="opacity-70" />

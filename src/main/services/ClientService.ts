@@ -59,7 +59,7 @@ export class ClientService {
         cargo: validatedData.cargo || '',
         cond_pgto_padrao: validatedData.condPgtoPadrao || '',
         limite_credito: validatedData.limiteCredito || 0,
-        vendedor_padrao: validatedData.vendedorPadrao || '',
+        vendedor_padrao_id: validatedData.vendedorPadraoId || null,
         transporte_padrao: validatedData.transportePadrao,
         observacoes: validatedData.observacoes || ''
       }
@@ -108,7 +108,7 @@ export class ClientService {
       if (clientData.cargo !== undefined) dbClientData.cargo = clientData.cargo
       if (clientData.condPgtoPadrao !== undefined) dbClientData.cond_pgto_padrao = clientData.condPgtoPadrao
       if (clientData.limiteCredito !== undefined) dbClientData.limite_credito = clientData.limiteCredito
-      if (clientData.vendedorPadrao !== undefined) dbClientData.vendedor_padrao = clientData.vendedorPadrao
+      if (clientData.vendedorPadraoId !== undefined) dbClientData.vendedor_padrao_id = clientData.vendedorPadraoId
       if (clientData.transportePadrao !== undefined) dbClientData.transporte_padrao = clientData.transportePadrao
       if (clientData.observacoes !== undefined) dbClientData.observacoes = clientData.observacoes
 

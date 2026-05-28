@@ -8,55 +8,56 @@ import BeautifulPage from "../../pages/BeautifulPage/BeautifulPage"; // placehol
 import { AuthGuard, GuestGuard } from "../../shared/components/auth/AuthGuard";
 
 // Import from new module structure
-import { 
-  OrcamentosListPage, 
-  OrcamentoCreatePage,
-  OrcamentoDetailPage,
-  OrcamentoEditPage 
+import {
+    OrcamentosListPage,
+    OrcamentoCreatePage,
+    OrcamentoDetailPage,
+    OrcamentoEditPage
 } from '../../modules/orcamentos/pages'
 
 import {
-  ClientesListPage,
-  ClienteCreatePage,
-  ClienteEditPage
+    ClientesListPage,
+    ClienteCreatePage,
+    ClienteEditPage
 } from '../../modules/clientes/pages'
 
 import { OnboardingWizard } from '../../modules/onboarding/pages/OnboardingWizard'
 
 import DatabaseTestPage from "../../pages/Debug/DatabaseTestPage";
+import DashboardPage from "@renderer/modules/dashboard/pages/DashboardPage";
 export const routes: RouteObject[] = [
     // Rotas fora do layout (ex.: auth) - apenas para usuários não logados
-    { 
-        path: "/auth/login", 
+    {
+        path: "/auth/login",
         element: (
             <GuestGuard>
                 <AuthLogin />
             </GuestGuard>
-        ) 
+        )
     },
-    { 
-        path: "/auth/forgot-password", 
+    {
+        path: "/auth/forgot-password",
         element: (
             <GuestGuard>
                 <ForgotPassword />
             </GuestGuard>
-        ) 
+        )
     },
-    { 
-        path: "/auth/reset-password", 
+    {
+        path: "/auth/reset-password",
         element: (
             <GuestGuard>
                 <ResetPassword />
             </GuestGuard>
-        ) 
+        )
     },
-    { 
-        path: "/onboarding", 
+    {
+        path: "/onboarding",
         element: (
             <GuestGuard>
                 <OnboardingWizard />
             </GuestGuard>
-        ) 
+        )
     },
 
     // Rotas com layout persistente (Sidebar + Header ficam em <App />) - protegidas por autenticação
@@ -71,11 +72,7 @@ export const routes: RouteObject[] = [
             {
                 index: true,
                 element: (
-                    <BeautifulPage
-                        title="Dashboard"
-                        subtitle="Visão geral e atalhos rápidos do ERP."
-                        showHome={false}
-                    />
+                    <DashboardPage />
                 ),
             },
             { path: "vendas/orcamentos", element: <OrcamentosListPage /> },

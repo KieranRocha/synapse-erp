@@ -24,7 +24,7 @@ export function VendedorSection({ form }: VendedorSectionProps) {
 
   const loadSellers = async () => {
     try {
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('auth-token')
       if (!token) return
 
       const data = await window.api.sellers.getActive(token)

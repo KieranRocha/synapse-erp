@@ -6,3 +6,4 @@ export { ObservacoesSection } from './ObservacoesSection';
 export { ChecklistSidebar } from './ChecklistSidebar';
 export { VendedorSection } from './VendedorSection';
 export { ContatosClienteSection } from './ContatosClienteSection';
+export { AnexosSection } from './AnexosSection';

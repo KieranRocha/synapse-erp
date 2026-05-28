@@ -28,7 +28,7 @@ export interface Client {
   cargo: string | null
   cond_pgto_padrao: string | null
   limite_credito: number | null
-  vendedor_padrao: string | null
+  vendedor_padrao_id: number | null
   transporte_padrao: string | null
   observacoes: string | null
   created_at: Date

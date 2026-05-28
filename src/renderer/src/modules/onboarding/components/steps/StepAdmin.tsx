@@ -90,7 +90,7 @@ export function StepAdmin({ data, onChange }: StepAdminProps) {
   const allChecksPass = Object.values(checks).every(Boolean);
 
   return (
-    <section className=" rounded-lg p-6 space-y-6">
+    <section className=" rounded-lg  space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3 pb-4 border-b border-border">
         <Shield size={24} className="text-primary" />
@@ -151,8 +151,7 @@ export function StepAdmin({ data, onChange }: StepAdminProps) {
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
-          <StrengthBar password={data.senha || ''} />
-          <PasswordChecklist password={data.senha || ''} />
+
         </Field>
 
         {/* Confirmar Senha */}
@@ -182,7 +181,8 @@ export function StepAdmin({ data, onChange }: StepAdminProps) {
           )}
         </Field>
       </div>
-
+      <StrengthBar password={data.senha || ''} />
+      <PasswordChecklist password={data.senha || ''} />
       {/* Info Box */}
       <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
         <div className="flex items-start gap-3">

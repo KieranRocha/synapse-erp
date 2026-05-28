@@ -55,7 +55,8 @@
       "Bash(wmic:*)",
       "Bash(findstr:*)",
       "Bash(timeout:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []
