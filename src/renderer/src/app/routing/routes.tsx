@@ -8,44 +8,56 @@ import BeautifulPage from "../../pages/BeautifulPage/BeautifulPage"; // placehol
 import { AuthGuard, GuestGuard } from "../../shared/components/auth/AuthGuard";
 
 // Import from new module structure
-import { 
-  OrcamentosListPage, 
-  OrcamentoCreatePage,
-  OrcamentoDetailPage,
-  OrcamentoEditPage 
+import {
+    OrcamentosListPage,
+    OrcamentoCreatePage,
+    OrcamentoDetailPage,
+    OrcamentoEditPage
 } from '../../modules/orcamentos/pages'
 
-import { 
-  ClientesListPage, 
-  ClienteCreatePage 
+import {
+    ClientesListPage,
+    ClienteCreatePage,
+    ClienteEditPage
 } from '../../modules/clientes/pages'
 
+import { OnboardingWizard } from '../../modules/onboarding/pages/OnboardingWizard'
+
 import DatabaseTestPage from "../../pages/Debug/DatabaseTestPage";
+import DashboardPage from "@renderer/modules/dashboard/pages/DashboardPage";
 export const routes: RouteObject[] = [
     // Rotas fora do layout (ex.: auth) - apenas para usuários não logados
-    { 
-        path: "/auth/login", 
+    {
+        path: "/auth/login",
         element: (
             <GuestGuard>
                 <AuthLogin />
             </GuestGuard>
-        ) 
+        )
     },
-    { 
-        path: "/auth/forgot-password", 
+    {
+        path: "/auth/forgot-password",
         element: (
             <GuestGuard>
                 <ForgotPassword />
             </GuestGuard>
-        ) 
+        )
     },
-    { 
-        path: "/auth/reset-password", 
+    {
+        path: "/auth/reset-password",
         element: (
             <GuestGuard>
                 <ResetPassword />
             </GuestGuard>
-        ) 
+        )
+    },
+    {
+        path: "/onboarding",
+        element: (
+            <GuestGuard>
+                <OnboardingWizard />
+            </GuestGuard>
+        )
     },
 
     // Rotas com layout persistente (Sidebar + Header ficam em <App />) - protegidas por autenticação
@@ -60,11 +72,7 @@ export const routes: RouteObject[] = [
             {
                 index: true,
                 element: (
-                    <BeautifulPage
-                        title="Dashboard"
-                        subtitle="Visão geral e atalhos rápidos do ERP."
-                        showHome={false}
-                    />
+                    <DashboardPage />
                 ),
             },
             { path: "vendas/orcamentos", element: <OrcamentosListPage /> },
@@ -73,6 +81,7 @@ export const routes: RouteObject[] = [
             { path: "vendas/orcamentos/:id/editar", element: <OrcamentoEditPage /> },
             { path: "clientes", element: <ClientesListPage /> },
             { path: "clientes/novo", element: <ClienteCreatePage /> },
+            { path: "clientes/:id/editar", element: <ClienteEditPage /> },
             { path: "projetos", element: <BeautifulPage title="Projetos" subtitle="Planejamento, produção, instalação e entrega." /> },
             { path: "estoque", element: <BeautifulPage title="BOM & Estoque" subtitle="Materiais, itens e estrutura de produto." /> },
             { path: "compras", element: <BeautifulPage title="Compras" subtitle="Requisições, cotações e pedidos de compra." /> },

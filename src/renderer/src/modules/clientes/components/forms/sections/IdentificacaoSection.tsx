@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Control, useWatch, UseFormSetValue, FieldErrors } from 'react-hook-form';
-import { Building2, Search, Loader2 } from 'lucide-react';
-import { Section, Field, Input, Select, Hint, Divider } from '../../../../../shared/components/ui';
+import { Building2, Loader2 } from 'lucide-react';
+import { Section, Field, Input, Select, SelectItem, Hint, Divider, RadioGroup } from '../../../../../shared/components/ui';
 import { ClienteFormData } from '../../../schemas/clienteSchema';
 import { CNPJResponse } from '../../../types/clienteTypes';
 import { useToastStore } from '../../../../../shared/hooks/useToast';
@@ -15,28 +15,45 @@ interface IdentificacaoSectionProps {
   setCnpjFilled: (value: boolean) => void;
 }
 
+const TIPO_PESSOA_OPTIONS = [
+  { value: 'PJ', label: 'Pessoa Jurídica' },
+  { value: 'PF', label: 'Pessoa Física' },
+];
+
+const INDICADOR_IE_OPTIONS = ['Contribuinte', 'Isento', 'Não Contribuinte'];
+const REGIME_TRIB_OPTIONS = ['Simples Nacional', 'Lucro Presumido', 'Lucro Real'];
+
 export function IdentificacaoSection({ control, setValue, errors, register, cnpjFilled, setCnpjFilled }: IdentificacaoSectionProps) {
   const pushToast = useToastStore();
   const [isLoadingCNPJ, setIsLoadingCNPJ] = useState(false);
-  
+
   const tipoPessoa = useWatch({ control, name: 'tipoPessoa' });
   const cpfCnpj = useWatch({ control, name: 'cpfCnpj' });
+  const indicadorIE = useWatch({ control, name: 'indicadorIE' });
+  const regimeTrib = useWatch({ control, name: 'regimeTrib' });
 
-  const formatCNPJ = (value: string) => {
-    const digits = value.replace(/\D/g, '').slice(0, 14);
-    return digits.replace(
-      /(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,
-      '$1.$2.$3/$4-$5'
-    );
+  // Formatação de CPF/CNPJ
+  const formatCPFCNPJ = (value: string) => {
+    const digits = value.replace(/\D/g, '');
+
+    if (digits.length <= 11) {
+      // CPF: 000.000.000-00
+      return digits
+        .slice(0, 11)
+        .replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    } else {
+      // CNPJ: 00.000.000/0000-00
+      return digits
+        .slice(0, 14)
+        .replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+    }
   };
 
+  // Busca automática de CNPJ
   const searchCNPJ = async (cnpj: string) => {
     const raw = cnpj.replace(/\D/g, '');
 
-    if (raw.length !== 14) {
-      pushToast('CNPJ deve ter 14 dígitos');
-      return;
-    }
+    if (raw.length !== 14) return;
 
     setIsLoadingCNPJ(true);
 
@@ -62,7 +79,7 @@ export function IdentificacaoSection({ control, setValue, errors, register, cnpj
       const numero = data?.numero || "";
       const complemento = data?.complemento || "";
       const bairro = data?.bairro || "";
-      const cidade = data?.municipio || data?.cidade || "";
+      const cidade = data?.municipio || "";
       const uf = data?.uf || "";
       const cep = data?.cep?.replace(/\D/g, '').replace(/(\d{5})(\d{3})/, '$1-$2') || "";
 
@@ -80,9 +97,7 @@ export function IdentificacaoSection({ control, setValue, errors, register, cnpj
       setCnpjFilled(true);
 
       if (nome) {
-        pushToast(`Cliente preenchido com "${nome}" a partir do CNPJ.`);
-      } else {
-        pushToast('Dados carregados do CNPJ.');
+        pushToast(`Dados preenchidos automaticamente a partir do CNPJ.`);
       }
 
     } catch (error) {
@@ -93,132 +108,137 @@ export function IdentificacaoSection({ control, setValue, errors, register, cnpj
     }
   };
 
-  const handleCNPJChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatCNPJ(e.target.value);
+  // Auto-search quando CNPJ/CPF estiver completo
+  useEffect(() => {
+    const digits = cpfCnpj?.replace(/\D/g, '') || '';
+
+    if (tipoPessoa === 'PJ' && digits.length === 14) {
+      searchCNPJ(cpfCnpj);
+    }
+  }, [cpfCnpj, tipoPessoa]);
+
+  const handleCPFCNPJChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCPFCNPJ(e.target.value);
     setValue('cpfCnpj', formatted);
     setCnpjFilled(false);
   };
 
-  const handleCNPJSearch = () => {
-    if (tipoPessoa === "PJ" && cpfCnpj) {
-      searchCNPJ(cpfCnpj);
-    }
-  };
-
   const clearCNPJData = () => {
     setCnpjFilled(false);
-    pushToast('Campos liberados para edição manual. Dados mantidos.');
+    pushToast('Campos liberados para edição manual.');
   };
 
   return (
-    <Section 
-      title="Identificação" 
-      subtitle="Tipo de pessoa e dados base" 
+    <Section
+      title="Identificação"
+      subtitle="Tipo de pessoa e dados base"
       icon={<Building2 size={18} className="opacity-80" />}
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-4">
-        <Field label="Tipo de pessoa" hint="Selecione PJ ou PF.">
-          <Select options={["PJ", "PF"]} {...register('tipoPessoa')} />
-        </Field>
-        
-        <Field 
-          label="CPF/CNPJ *" 
-          hint={tipoPessoa === "PJ" ? "Ex.: 00.000.000/0000-00" : "Ex.: 000.000.000-00"} 
-          error={errors.cpfCnpj?.message}
-        >
-          <div className="flex gap-2">
-            <Input
-              placeholder={tipoPessoa === "PJ" ? "00.000.000/0000-00" : "000.000.000-00"}
-              {...register('cpfCnpj', {
-                onChange: tipoPessoa === "PJ" ? handleCNPJChange : undefined
-              })}
-            />
-            {tipoPessoa === "PJ" && (
-              <button
-                type="button"
-                onClick={handleCNPJSearch}
-                disabled={isLoadingCNPJ || !cpfCnpj}
-                className="px-3 py-2 rounded-lg border border-emerald-500/40 text-emerald-600 text-sm hover:bg-emerald-500/10 hover:bg-muted transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-              >
-                {isLoadingCNPJ ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  <Search size={16} />
-                )}
-              </button>
-            )}
-          </div>
+      <div className="space-y-5">
+        <Field label="Tipo de pessoa *" hint="Selecione o tipo de pessoa">
+          <RadioGroup
+            options={TIPO_PESSOA_OPTIONS}
+            value={tipoPessoa}
+            onChange={(value) => setValue('tipoPessoa', value as 'PJ' | 'PF')}
+          />
         </Field>
 
-        {tipoPessoa === "PJ" ? (
-          <>
-            <Field label="Razão social *" error={errors.razaoSocial?.message}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+          <Field
+            label={tipoPessoa === 'PJ' ? 'CNPJ *' : 'CPF *'}
+            hint={tipoPessoa === 'PJ' ? 'Digite para buscar automaticamente' : 'Ex.: 000.000.000-00'}
+            error={errors.cpfCnpj?.message}
+          >
+            <div className="relative">
               <Input
-                placeholder="Nome jurídico"
-                readonly={cnpjFilled}
-                {...register('razaoSocial')}
+                placeholder={tipoPessoa === 'PJ' ? '00.000.000/0000-00' : '000.000.000-00'}
+                {...register('cpfCnpj', {
+                  onChange: handleCPFCNPJChange
+                })}
               />
-            </Field>
-            <Field label="Nome fantasia" hint="Opcional">
-              <Input
-                placeholder="Como o cliente é conhecido"
-                readonly={cnpjFilled}
-                {...register('nomeFantasia')}
-              />
-            </Field>
-          </>
-        ) : (
-          <Field label="Nome completo *" error={errors.nomePF?.message}>
-            <Input 
-              placeholder="Ex.: Maria Silva" 
-              {...register('nomePF')} 
-            />
+              {isLoadingCNPJ && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <Loader2 size={16} className="animate-spin text-primary" />
+                </div>
+              )}
+            </div>
           </Field>
+
+          {tipoPessoa === 'PJ' ? (
+            <>
+              <Field label="Razão social *" error={errors.razaoSocial?.message}>
+                <Input
+                  placeholder="Nome jurídico"
+                  readOnly={cnpjFilled}
+                  {...register('razaoSocial')}
+                />
+              </Field>
+              <Field label="Nome fantasia">
+                <Input
+                  placeholder="Como a empresa é conhecida"
+                  readOnly={cnpjFilled}
+                  {...register('nomeFantasia')}
+                />
+              </Field>
+            </>
+          ) : (
+            <Field label="Nome completo *" error={errors.nomePF?.message}>
+              <Input
+                placeholder="Ex.: João Silva"
+                {...register('nomePF')}
+              />
+            </Field>
+          )}
+        </div>
+
+        <Divider />
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <Field label="Indicador IE *">
+            <Select {...register('indicadorIE')}>
+              <option value="">Selecione</option>
+              {INDICADOR_IE_OPTIONS.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+            </Select>
+          </Field>
+
+          <Field label="IE" hint="Inscrição Estadual">
+            <Input placeholder="Ex.: 123.456.789.012" {...register('ie')} />
+          </Field>
+
+          <Field label="IM" hint="Inscrição Municipal">
+            <Input placeholder="Ex.: 12345" {...register('im')} />
+          </Field>
+        </div>
+
+        <Field label="Regime Tributário *">
+          <Select {...register('regimeTrib')}>
+            <option value="">Selecione</option>
+            {REGIME_TRIB_OPTIONS.map((option) => (
+              <SelectItem key={option} value={option}>
+                {option}
+              </SelectItem>
+            ))}
+          </Select>
+        </Field>
+
+        {cnpjFilled && tipoPessoa === 'PJ' && (
+          <div className="flex items-center justify-between p-3 bg-bg  rounded-lg">
+            <Hint>✅ Dados preenchidos automaticamente via CNPJ</Hint>
+            <button
+              type="button"
+              onClick={clearCNPJData}
+              className="text-xs px-3 py-1.5 rounded-lg border border-emerald-300 text-emerald-700 hover:bg-emerald-100 transition"
+            >
+              Editar manualmente
+            </button>
+          </div>
         )}
       </div>
-
-      <Divider />
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-4">
-        <Field label="Indicador IE" hint="Contribuinte/Isento/Não Contribuinte">
-          <Select 
-            options={["Contribuinte", "Isento", "Não Contribuinte"]} 
-            {...register('indicadorIE')} 
-          />
-        </Field>
-        
-        <Field label="IE" hint="Inscrição Estadual (se houver)">
-          <Input placeholder="Isento?" {...register('ie')} />
-        </Field>
-        
-        <Field label="IM" hint="Inscrição Municipal (se houver)">
-          <Input {...register('im')} />
-        </Field>
-        
-        <Field label="Regime Tributário" hint="Usado em faturamento e fiscal">
-          <Select 
-            options={["Simples Nacional", "Lucro Presumido", "Lucro Real"]} 
-            {...register('regimeTrib')} 
-          />
-        </Field>
-        
-        <Field label="SUFRAMA" hint="Se aplicável">
-          <Input {...register('suframa')} />
-        </Field>
-      </div>
-
-      {cnpjFilled && tipoPessoa === "PJ" && (
-        <div className="flex items-center justify-between mt-4">
-          <Hint>✅ Alguns dados preenchidos automaticamente via CNPJ.</Hint>
-          <button
-            type="button"
-            onClick={clearCNPJData}
-            className="text-xs px-2 py-1 rounded-lg border border-border hover:bg-muted transition"
-          >
-            Editar manualmente
-          </button>
-        </div>
-      )}
     </Section>
   );
 }

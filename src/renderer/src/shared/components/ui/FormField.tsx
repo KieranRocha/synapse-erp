@@ -9,13 +9,13 @@ interface FormFieldProps {
   children: React.ReactNode;
 }
 
-export function FormField({ 
-  label, 
-  error, 
-  hint, 
-  required = false, 
+export function FormField({
+  label,
+  error,
+  hint,
+  required = false,
   className = '',
-  children 
+  children
 }: FormFieldProps) {
   return (
     <div className={`flex flex-col ${className}`}>

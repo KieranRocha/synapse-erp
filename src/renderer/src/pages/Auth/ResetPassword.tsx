@@ -399,7 +399,7 @@ export default function ResetPassword() {
                     )}
                 </div>
 
-                <form onSubmit={submit} className="space-y-4">
+                <form onSubmit={submit} className="space-y-6">
                     <Field
                         label="Nova senha"
                         icon={Lock}

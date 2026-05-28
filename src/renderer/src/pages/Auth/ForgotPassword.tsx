@@ -110,16 +110,20 @@ export default function ForgotPassword() {
 
     return (
         <div className="min-h-screen flex items-center bg-bg justify-center py-12 px-4 sm:px-6 lg:px-8 ">
-            <div className="w-full max-w-sm ">
+            <div className="w-full max-w-sm space-y-4">
 
-                <div className="text-center mb-2">
+                <div className="text-center mb-4 flex item-center justify-center ">
+                    <img src={logoSrc} alt="Logo" className="h-20 w-auto" />
+                </div>
+
+                <div className="text-center mb-6">
                     <h2 className="text-xl font-semibold text-fg mb-2">Esqueceu sua senha?</h2>
                     <p className="text-sm text-text">
                         Digite seu e-mail e enviaremos um link para redefinir sua senha.
                     </p>
                 </div>
 
-                <form onSubmit={submit} className="space-y-4 text-sm">
+                <form onSubmit={submit} className="space-y-8 text-sm">
                     <Field
                         label="E-mail"
                         icon={Mail}
@@ -141,7 +145,7 @@ export default function ForgotPassword() {
 
 
                                     <p className="text-blue-500 text-xs font-semibold ">
-                                        E-mail Enviado, verifique sua caixa de entrada e também a caixa de spam.
+                                        E-mail Enviado, verifique sua caixa de entrada e também a caixa de spam. Aguarde {countdown}s para enviar novamente.
                                     </p>
                                 </div>
                             </div>
@@ -154,7 +158,7 @@ export default function ForgotPassword() {
                         className="w-full py-2.5 rounded-lg cursor-pointer disabled:cursor-pointer mb-2"
                     >
                         {submitting ? <Loader2Icon className="animate-spin" /> :
-                            countdown > 0 ? `Aguarde ${countdown}s para enviar novamente` :
+                            countdown > 0 ? `Aguarde para enviar novamente` :
                                 success ? "Enviar novamente" : "Enviar link de recuperação"}
                     </Button>
 

@@ -11,13 +11,13 @@ interface FieldProps {
 
 export function Field({ label, hint, error, required, children, className = "" }: FieldProps) {
   return (
-    <div className={`space-y-1.5 ${className}`}>
+    <div className={`space-y-1.5  flex flex-col gap-1 ${className}`}>
       <label className="text-sm font-medium text-fg">
         {label}
-        {required && <span className="text-danger ml-1">*</span>}
+        {required && <span className="text-danger  ml-1">*</span>}
       </label>
       {children}
-      {hint && !error && <p className="text-[11px] text-muted-foreground">{hint}</p>}
+      {hint && !error && <p className="text-[11px]  text-muted-foreground">{hint}</p>}
       {error && <p className="text-[11px] text-danger">{error}</p>}
     </div>
   );

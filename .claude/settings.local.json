@@ -47,7 +47,16 @@
       "Read(/C:\\Users\\kiera\\Documents\\synapse\\synapse-code\\src\\renderer\\src\\app\\layout/**)",
       "Read(/C:\\Users\\kiera\\Documents\\synapse\\synapse-code\\src\\renderer\\src\\modules\\orcamentos\\components\\forms\\wizard\\steps/**)",
       "Read(/C:\\Users\\kiera\\Documents\\synapse\\synapse-code\\src\\renderer\\src\\shared\\hooks/**)",
-      "Bash(npx electron-vite:*)"
+      "Bash(npx electron-vite:*)",
+      "Bash(npx vite:*)",
+      "Bash(curl:*)",
+      "Bash(tasklist)",
+      "Bash(taskkill:*)",
+      "Bash(wmic:*)",
+      "Bash(findstr:*)",
+      "Bash(timeout:*)",
+      "Bash(cat:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []

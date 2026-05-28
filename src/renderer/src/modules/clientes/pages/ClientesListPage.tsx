@@ -15,6 +15,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { KpiCards } from "../components/cards/KpiCards";
 
 /** ================================================================
  *  TYPES - Database Client Model
@@ -118,13 +119,15 @@ export default function ClientesPage() {
   });
   const [sort, setSort] = useState<SortKey>("-ultimo");
   const [open, setOpen] = useState(false);
-  
+
   // Backend state
   const [databaseClients, setDatabaseClients] = useState<DatabaseClient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const onNew = () => navigate("/clientes/novo");
+  const onEdit = (clienteId: number) => navigate(`/clientes/${clienteId}/editar`);
+  const onView = (clienteId: number) => console.log("Ver cliente", clienteId);
   const onExport = () => console.log("Exportar (mock)");
   const onEmail = () => console.log("Enviar e-mail (mock)");
 
@@ -133,15 +136,15 @@ export default function ClientesPage() {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Check if API is available
       if (!window.api || !window.api.clients) {
         throw new Error('API não disponível. Verifique se o preload script foi carregado corretamente.');
       }
-      
+
       const clients = await window.api.clients.getAll();
       setDatabaseClients(clients);
-      
+
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar clientes';
       setError(errorMessage);
@@ -172,17 +175,18 @@ export default function ClientesPage() {
     const ativos = clients.filter((c) => c.status === "ativo").length;
     const valor = clients.reduce((s, c) => s + c.valorTotal, 0);
     const ticket = total ? valor / total : 0;
-    const recentes30 = clients.filter(
-      (c) => (Date.now() - new Date(c.ultimoPedido).getTime()) / 86400000 <= 30
-    ).length;
+    const limiteTotal = clients.reduce((s, c) => s + (c.limiteCredito || 0), 0);
+
+    // Inadimplência mockada (poderia vir do backend)
+    const inadimplencia = 2.3;
 
     return {
-      total,
-      ativos,
-      ticket,
-      valor,
-      recentes30,
-      ativacaoPct: total ? (ativos / total) * 100 : 0,
+      totalClientes: total,
+      clientesAtivos: ativos,
+      limiteTotal,
+      faturamentoMes: valor * 0.15, // Mock: 15% do valor total
+      ticketMedio: ticket,
+      inadimplencia,
     };
   }, [clients]);
 
@@ -237,8 +241,8 @@ export default function ClientesPage() {
           </div>
           <div className="flex items-center gap-2">
             {error && (
-              <button 
-                onClick={loadClients} 
+              <button
+                onClick={loadClients}
                 className="px-3 py-2 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm hover:bg-red-100 transition"
               >
                 🔄 Tentar Novamente
@@ -257,14 +261,7 @@ export default function ClientesPage() {
         </div>
 
         {/* KPIs no padrão */}
-        <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-          <KpiCard title="Total" value={kpis.total} />
-          <KpiCard title="Ativos" value={kpis.ativos} />
-          <KpiCard title="Ativação" value={`${kpis.ativacaoPct.toFixed(1)}%`} />
-          <KpiCard title="Valor Total" value={currency(kpis.valor)} />
-          <KpiCard title="Ticket Médio" value={currency(kpis.ticket)} />
-          <KpiCard title="Ativos (30d)" value={kpis.recentes30} />
-        </section>
+        <KpiCards kpis={kpis} />
 
         {/* FiltersBar no padrão */}
         <section className="rounded-2xl border border-border bg-card/70 backdrop-blur p-3 md:p-4 mb-6">
@@ -364,52 +361,52 @@ export default function ClientesPage() {
           {!loading && !error && (
             <div className="grid gap-3 sm:hidden">
               {rows.map((c) => (
-              <article key={c.id} className="rounded-2xl border border-border bg-card shadow-card p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="font-semibold text-fg">{c.nome}</h3>
-                    <p className="text-sm text-muted-foreground">{c.cnpj}</p>
+                <article key={c.id} className="rounded-2xl border border-border bg-card shadow-card p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="font-semibold text-fg">{c.nome}</h3>
+                      <p className="text-sm text-muted-foreground">{c.cnpj}</p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <IconBtn title="Ver" onClick={() => onView(c.id)}>
+                        <Eye size={16} className="text-muted-foreground" />
+                      </IconBtn>
+                      <IconBtn title="Editar" onClick={() => onEdit(c.id)}>
+                        <Edit size={16} className="text-muted-foreground" />
+                      </IconBtn>
+                      <IconBtn title="Mais">
+                        <MoreVertical size={16} className="text-muted-foreground" />
+                      </IconBtn>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <IconBtn title="Ver">
-                      <Eye size={16} className="text-muted-foreground" />
-                    </IconBtn>
-                    <IconBtn title="Editar">
-                      <Edit size={16} className="text-muted-foreground" />
-                    </IconBtn>
-                    <IconBtn title="Mais">
-                      <MoreVertical size={16} className="text-muted-foreground" />
-                    </IconBtn>
-                  </div>
-                </div>
 
-                <div className="mt-3 grid grid-cols-1 gap-2 text-sm">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <MailIcon size={14} />
-                    <span className="truncate">{c.email}</span>
+                  <div className="mt-3 grid grid-cols-1 gap-2 text-sm">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <MailIcon size={14} />
+                      <span className="truncate">{c.email}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Phone size={14} />
+                      <span>{c.telefone}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <MapPin size={14} />
+                      <span>{c.cidade}, {c.uf}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Phone size={14} />
-                    <span>{c.telefone}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <MapPin size={14} />
-                    <span>{c.cidade}, {c.uf}</span>
-                  </div>
-                </div>
 
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <span className={`badge ${statusToBadge(c.status)}`}>{labelStatus(c.status)}</span>
-                  <span className={`badge ${categoriaToBadge(c.categoria)}`}>{labelCategoria(c.categoria)}</span>
-                  <span className="ml-auto text-sm font-medium text-fg">
-                    {currency(c.valorTotal)}
-                  </span>
-                </div>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <span className={`badge ${statusToBadge(c.status)}`}>{labelStatus(c.status)}</span>
+                    <span className={`badge ${categoriaToBadge(c.categoria)}`}>{labelCategoria(c.categoria)}</span>
+                    <span className="ml-auto text-sm font-medium text-fg">
+                      {currency(c.valorTotal)}
+                    </span>
+                  </div>
 
-                <div className="mt-1 text-xs text-muted-foreground">
-                  Último pedido: {dateBR(c.ultimoPedido)}
-                </div>
-              </article>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    Último pedido: {dateBR(c.ultimoPedido)}
+                  </div>
+                </article>
               ))}
             </div>
           )}
@@ -417,67 +414,67 @@ export default function ClientesPage() {
           {/* Desktop Table */}
           {!loading && !error && (
             <div className="hidden sm:block rounded-2xl border border-border bg-card/70 backdrop-blur overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="text-left border-b border-border bg-muted/40">
-                  <tr>
-                    <Th>Cliente</Th>
-                    <Th>Contato</Th>
-                    <Th>Localização</Th>
-                    <Th>Status</Th>
-                    <Th>Categoria</Th>
-                    <Th className="text-right">Valor Total</Th>
-                    <Th>Último Pedido</Th>
-                    <Th className="text-center">Ações</Th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((c, i) => (
-                    <tr key={c.id} className={`border-b border-border/50 hover:bg-muted/30 transition ${i % 2 ? "bg-muted/5" : "bg-transparent"}`}>
-                      <Td>
-                        <div>
-                          <div className="font-medium text-fg">{c.nome}</div>
-                          <div className="text-xs text-muted-foreground">{c.cnpj}</div>
-                        </div>
-                      </Td>
-                      <Td>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <MailIcon size={14} />
-                            <span className="truncate max-w-[220px]">{c.email}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <Phone size={14} />
-                            <span>{c.telefone}</span>
-                          </div>
-                        </div>
-                      </Td>
-                      <Td>
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <MapPin size={14} />
-                          <span>{c.cidade}, {c.uf}</span>
-                        </div>
-                      </Td>
-                      <Td>
-                        <span className={`badge ${statusToBadge(c.status)}`}>{labelStatus(c.status)}</span>
-                      </Td>
-                      <Td>
-                        <span className={`badge ${categoriaToBadge(c.categoria)}`}>{labelCategoria(c.categoria)}</span>
-                      </Td>
-                      <Td className="text-right font-medium text-fg">{currency(c.valorTotal)}</Td>
-                      <Td className="text-muted-foreground">{dateBR(c.ultimoPedido)}</Td>
-                      <Td>
-                        <div className="flex items-center justify-center gap-1">
-                          <IconBtn title="Visualizar"><Eye size={16} className="text-muted-foreground" /></IconBtn>
-                          <IconBtn title="Editar"><Edit size={16} className="text-muted-foreground" /></IconBtn>
-                          <IconBtn title="Mais opções"><MoreVertical size={16} className="text-muted-foreground" /></IconBtn>
-                        </div>
-                      </Td>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="text-left border-b border-border bg-muted/40">
+                    <tr>
+                      <Th>Cliente</Th>
+                      <Th>Contato</Th>
+                      <Th>Localização</Th>
+                      <Th>Status</Th>
+                      <Th>Categoria</Th>
+                      <Th className="text-right">Valor Total</Th>
+                      <Th>Último Pedido</Th>
+                      <Th className="text-center">Ações</Th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {rows.map((c, i) => (
+                      <tr key={c.id} className={`border-b border-border/50 hover:bg-muted/30 transition ${i % 2 ? "bg-muted/5" : "bg-transparent"}`}>
+                        <Td>
+                          <div>
+                            <div className="font-medium text-fg">{c.nome}</div>
+                            <div className="text-xs text-muted-foreground">{c.cnpj}</div>
+                          </div>
+                        </Td>
+                        <Td>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <MailIcon size={14} />
+                              <span className="truncate max-w-[220px]">{c.email}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Phone size={14} />
+                              <span>{c.telefone}</span>
+                            </div>
+                          </div>
+                        </Td>
+                        <Td>
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <MapPin size={14} />
+                            <span>{c.cidade}, {c.uf}</span>
+                          </div>
+                        </Td>
+                        <Td>
+                          <span className={`badge ${statusToBadge(c.status)}`}>{labelStatus(c.status)}</span>
+                        </Td>
+                        <Td>
+                          <span className={`badge ${categoriaToBadge(c.categoria)}`}>{labelCategoria(c.categoria)}</span>
+                        </Td>
+                        <Td className="text-right font-medium text-fg">{currency(c.valorTotal)}</Td>
+                        <Td className="text-muted-foreground">{dateBR(c.ultimoPedido)}</Td>
+                        <Td>
+                          <div className="flex items-center justify-center gap-1">
+                            <IconBtn title="Visualizar" onClick={() => onView(c.id)}><Eye size={16} className="text-muted-foreground" /></IconBtn>
+                            <IconBtn title="Editar" onClick={() => onEdit(c.id)}><Edit size={16} className="text-muted-foreground" /></IconBtn>
+                            <IconBtn title="Mais opções"><MoreVertical size={16} className="text-muted-foreground" /></IconBtn>
+                          </div>
+                        </Td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 
@@ -503,7 +500,7 @@ export default function ClientesPage() {
             <div className="text-center py-12 rounded-2xl border border-red-200 bg-red-50">
               <div className="text-red-800 font-medium mb-1">Erro ao carregar clientes</div>
               <div className="text-sm text-red-600 mb-4">{error}</div>
-              <button 
+              <button
                 onClick={loadClients}
                 className="px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition"
               >
@@ -519,13 +516,13 @@ export default function ClientesPage() {
                 {clients.length === 0 ? 'Nenhum cliente cadastrado' : 'Nenhum cliente encontrado'}
               </div>
               <div className="text-sm text-muted-foreground mb-4">
-                {clients.length === 0 
-                  ? 'Comece cadastrando seu primeiro cliente.' 
+                {clients.length === 0
+                  ? 'Comece cadastrando seu primeiro cliente.'
                   : 'Ajuste filtros ou o termo de busca.'
                 }
               </div>
               {clients.length === 0 && (
-                <button 
+                <button
                   onClick={onNew}
                   className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition"
                 >
@@ -547,18 +544,9 @@ export default function ClientesPage() {
 /** ================================================================
  *  ÁTOMOS (no teu padrão de tokens)
  *  ================================================================ */
-function KpiCard({ title, value }: { title: string; value: string | number }) {
+function IconBtn({ title, children, onClick }: { title: string; children: React.ReactNode; onClick?: () => void }) {
   return (
-    <div className="rounded-2xl border border-border bg-card shadow-card backdrop-blur p-4">
-      <p className="text-xs text-muted-foreground mb-1">{title}</p>
-      <div className="text-xl font-semibold text-fg">{value}</div>
-    </div>
-  );
-}
-
-function IconBtn({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <button title={title} className="p-2 rounded-xl hover:bg-muted/50 transition">
+    <button title={title} onClick={onClick} className="p-2 rounded-xl hover:bg-muted/50 transition">
       {children}
     </button>
   );
