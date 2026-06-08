@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { prisma } from '../database'
 
 export interface ClientContactInput {
   nome: string
@@ -21,10 +19,7 @@ export class ClientContactService {
         tenantId,
         clientId
       },
-      orderBy: [
-        { principal: 'desc' },
-        { nome: 'asc' }
-      ]
+      orderBy: [{ principal: 'desc' }, { nome: 'asc' }]
     })
   }
 

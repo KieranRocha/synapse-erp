@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { prisma } from '../database'
 
 export interface SellerInput {
   nome: string
@@ -17,10 +15,7 @@ export class SellerService {
   static async getAllSellers(tenantId: string) {
     return await prisma.seller.findMany({
       where: { tenantId },
-      orderBy: [
-        { ativo: 'desc' },
-        { nome: 'asc' }
-      ]
+      orderBy: [{ ativo: 'desc' }, { nome: 'asc' }]
     })
   }
 
